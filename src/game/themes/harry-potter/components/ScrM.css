@@ -1,0 +1,211 @@
+/*  custom font for Marauders Map theme */
+
+@font-face {
+    font-family: 'Marauders Map';
+    src: url('./MaraudersMap.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Harry P Font';
+    src: url('./HarryP-MVZ6w.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+body {
+    font-family: 'Marauders Map', serif;
+    color: #4b2e2e;
+}
+
+.start-text {
+    font-family: 'Harry P Font', serif;
+    font-size: 600%;
+    text-align: center;
+    margin-bottom: 20px;
+    color: #4b2e2e;
+}
+
+.start-title {
+    font-family: 'Harry P Font', serif;
+    font-size: 400%;
+    text-align: center;
+    margin-bottom: 20px;
+    color: #4b2e2e;
+}
+
+.main-game {
+    margin: 0;
+    text-align: center;
+    font-family: 'Marauders Map', serif;
+    color: #4b2e2e;
+}
+
+/* Header inside main-game */
+
+.main-game h1 {
+    font-size: 50%;
+    margin-bottom: 1rem;
+}
+
+
+.main-container {
+    opacity: 0;
+    filter: blur(6px);
+    transition: opacity 1s ease, filter 1s ease;
+    pointer-events: none;
+}
+
+/* General heading styling */
+
+h1 {
+    font-size: 350%;
+    margin-bottom: 20px;
+    color: #4b2e2e;
+}
+
+h2 {
+    font-size: 200%;
+    margin-bottom: 15px;
+    color: #4b2e2e;
+}
+
+p {
+    font-size: 1rem;
+    margin-bottom: 20px;
+    color: #4b2e2e;
+}
+
+/* Styling for Play button */
+
+.play-button {
+    padding: 12px 24px;
+    font-size: 100%;
+    font-family: 'Marauders Map', serif;
+    background-color: #8B5E3C;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+/*hover effect */
+.marauders-container {
+    display: flex;
+    flex-direction: column;
+    /* stack title + button top→bottom */
+    justify-content: center;
+    /* vertical centering */
+    align-items: center;
+    /* horizontal centering */
+    min-height: 75vh;
+    /* min-height: 100vh;         full viewport height */
+    /* avoid forcing horizontal scroll */
+    padding: 1rem;
+    /* optional breathing room */
+}
+
+/* When hovered, unblur content */
+
+.marauders-container:hover .main-container {
+    opacity: 1;
+    filter: blur(0);
+    pointer-events: auto;
+}
+
+.character-reveal-box {
+    display: flex;
+    align-items: flex-start;
+    /* top-align image + text */
+    gap: 1rem;
+    /* space between image and info */
+    background-color: #d3ba93;
+    border: 1px solid #a47148;
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1rem auto;
+    /* center on page */
+    max-width: 600px;
+    /* don’t stretch too wide */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    font-family: 'Marauders Map', serif;
+    color: #4b2e2e;
+}
+
+.character-image {
+    flex-shrink: 0;
+    /* image never shrinks smaller */
+    width: 150px;
+    /* fixed width */
+    height: 200px;
+    /* fixed height */
+    object-fit: cover;
+    /* crop/scale to fill */
+    border-radius: 4px;
+    background: #eee;
+    /* placeholder bg if image missing */
+}
+
+.character-info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    /* center text vertically next to image */
+    flex: 1;
+    /* take remaining space */
+}
+
+.character-info h2 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.5rem;
+}
+
+.character-info p {
+    margin: 0.25rem 0;
+    line-height: 1.4;
+}
+
+/* Mobile adjustments */
+@media (max-width: 600px) {
+    .marauders-container {
+        padding: 1rem;
+        /* give breathing room top/bottom */
+    }
+
+    .start-text {
+        font-size: 4.0rem;
+        /* scale down the title */
+        margin-bottom: 1rem;
+    }
+
+    .start-title {
+        font-size: 3.0rem;
+        margin-bottom: 1rem;
+    }
+
+    .main-game {
+        margin: 0;
+        /* override any leftover offsets */
+    }
+
+    .marauders-container h1 {
+        font-size: 3rem;
+        /* scale down the title */
+        margin-bottom: 0.75rem;
+    }
+
+    .play-button {
+        font-size: 1rem;
+        padding: 0.75rem 1.5rem;
+    }
+
+    h2 {
+        font-size: 110%;
+    }
+
+    p {
+        font-size: 80%;
+    }
+}

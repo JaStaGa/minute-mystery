@@ -1,0 +1,35 @@
+/* Style for the input text box */
+
+
+input[type="text"] {
+    background-color: #fef9e7;
+    border: 2px solid #a47148;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-family: 'Cinzel', serif;
+    color: #4b2e2e;
+}
+
+
+/* Style for the submit button */
+
+button {
+    background-color: #a47148;
+    border: none;
+    padding: 8px 12px;
+    margin-left: 8px;
+    border-radius: 6px;
+    font-family: 'Cinzel', serif;
+    cursor: pointer;
+}
+
+.play-button {
+    padding: 12px 24px;
+    font-size: 100%;
+    background-color: #8B5E3C;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}

@@ -1,0 +1,57 @@
+@font-face {
+    font-family: 'Marauders Map';
+    src: url('./MaraudersMap.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+.guess-log {
+    background-color: #d3ba93;
+    border: 1px solid #4b2e2e;
+    padding: 16px;
+    margin-top: 20px;
+    font-family: 'Marauders Map', serif;
+    color: #4b2e2e;
+    border-radius: 8px;
+}
+
+.name-cell {
+    background-color: #8B5E3C;
+}
+
+/* GuessLog.css */
+
+/* 1) Always wrap the table for overflow and centering */
+.guess-log-wrapper {
+    width: 100%;
+    max-width: 750px;
+    align-self: center;
+    overflow-x: auto;
+    overflow-y: hidden;
+    /* scroll if too wide */
+    margin: 0 auto;
+    /* center the wrapper */
+    box-sizing: border-box;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* 2) Keep the table itself centered inside that wrapper */
+.guess-log-wrapper table {
+    width: 100%;
+}
+
+/* 3) On narrow screens, stop forcing a min-width */
+@media (max-width: 750px) {
+    .guess-log-wrapper {
+        padding: 1%;
+        width: 100%;
+        align-self: center;
+    }
+
+    .guess-log-wrapper table {
+        /* remove any fixed minimum, let it flex or scroll */
+        width: 100%;
+        min-width: auto;
+        align-self: center;
+    }
+}
