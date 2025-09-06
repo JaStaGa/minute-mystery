@@ -2,7 +2,6 @@
 
 // imports and props
 import React, { useState } from 'react';
-import './InputBox.css';
 
 interface InputBoxProps {
     onSubmitGuess: (guess: string) => void;

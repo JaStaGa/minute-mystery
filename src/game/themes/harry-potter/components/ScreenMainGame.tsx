@@ -5,7 +5,6 @@ import InputBox from './InputBox';
 import GuessLog from './GuessLog';
 import SilhouetteHint from './SilhouetteHint';
 import type { HPDetail } from '../types';
-import './ScrM.css';
 import styled from 'styled-components';
 
 const Link = styled.button`

@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useReducer, useState } from "react";
+import { useEffect, useReducer, useRef, useState } from "react";
 import RequireUsername from "@/components/require-username";
 import Countdown from "@/game/components/Countdown";
 import { reducer, pickRandom } from "@/game/engine/session";
@@ -11,6 +11,10 @@ import GuessLogHP from "@/game/components/GuessLogHP";
 export default function HPGame() {
     const [all, setAll] = useState<Character[]>([]);
     const [ready, setReady] = useState(false);
+    const [timerKey, setTimerKey] = useState(0);
+    const [solved, setSolved] = useState<Character[]>([]);            // <-- list of correct answers
+    const advanceTimeout = useRef<number | null>(null);               // <-- delay handle
+
     const [state, dispatch] = useReducer(reducer, {
         status: "idle",
         target: null,
@@ -25,16 +29,30 @@ export default function HPGame() {
 
     function start() {
         if (!ready) return;
+        setSolved([]);                                                 // clear previous session list
+        setTimerKey(k => k + 1);
         dispatch({ type: "start", target: pickRandom(all) });
     }
 
     function onGuess(fd: FormData) {
         const name = String(fd.get("guess") || "");
-        const correct = state.target && name.toLowerCase() === state.target.name.toLowerCase();
+        const target = state.target as Character | null;
+        const correct = target && name.toLowerCase() === target.name.toLowerCase();
+
         dispatch({ type: "guess", name });
-        if (correct) dispatch({ type: "next-target", target: pickRandom(all) });
+
+        if (correct && target) {
+            // after 1200ms: add to solved list, clear log via next-target, roll new target
+            if (advanceTimeout.current) window.clearTimeout(advanceTimeout.current);
+            advanceTimeout.current = window.setTimeout(() => {
+                setSolved(prev => [...prev, target]);
+                dispatch({ type: "next-target", target: pickRandom(all) });
+            }, 1200);
+        }
     }
 
+    // cleanup pending timeout on unmount/end
+    useEffect(() => () => { if (advanceTimeout.current) window.clearTimeout(advanceTimeout.current); }, []);
     const ended = state.status === "ended" || state.mistakes >= 5;
 
     return (
@@ -54,7 +72,7 @@ export default function HPGame() {
                             <div className="flex items-center gap-4">
                                 <div>Score: <strong>{state.score}</strong></div>
                                 <div>Mistakes: <strong>{state.mistakes}</strong>/5</div>
-                                <Countdown ms={60_000} onEnd={() => dispatch({ type: "end" })} />
+                                <Countdown key={timerKey} ms={60_000} onEnd={() => dispatch({ type: "end" })} />
                             </div>
 
                             <form action={onGuess} className="flex gap-2">
@@ -70,7 +88,30 @@ export default function HPGame() {
                                 <button className="px-3 py-2 rounded bg-white text-black" type="submit">Guess</button>
                             </form>
 
+                            {/* Attempts log stays visible; correct row turns green, then clears after 1200ms */}
                             <GuessLogHP target={state.target} characters={all} attempts={state.attempts} />
+
+                            {/* Solved list: accumulates correct answers for this 60s session */}
+                            {solved.length > 0 && (
+                                <div className="space-y-2">
+                                    <h2 className="text-lg font-semibold">Correct this session</h2>
+                                    <ul className="space-y-2">
+                                        {solved.map((c) => (
+                                            <li key={c.id} className="flex items-center gap-3 bg-[#d3ba93] border border-[#a47148] rounded p-2 text-[#4b2e2e]">
+                                                <img
+                                                    src={c.image || "https://via.placeholder.com/60x80"}
+                                                    alt={c.name}
+                                                    className="w-12 h-16 object-cover rounded"
+                                                />
+                                                <div className="leading-tight">
+                                                    <div className="font-medium">{c.name}</div>
+                                                    <div className="text-sm opacity-80">{c.house}</div>
+                                                </div>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
                         </div>
                     )}
 
@@ -78,7 +119,10 @@ export default function HPGame() {
                         <div className="space-y-3">
                             <div className="text-xl font-semibold">Session ended</div>
                             <div>Final score: {state.score}</div>
-                            <button className="px-4 py-2 rounded bg-white text-black" onClick={() => dispatch({ type: "reset" })}>
+                            <button
+                                className="px-4 py-2 rounded bg-white text-black"
+                                onClick={() => dispatch({ type: "reset" })}
+                            >
                                 Reset
                             </button>
                         </div>

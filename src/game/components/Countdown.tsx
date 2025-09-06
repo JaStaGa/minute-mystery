@@ -5,20 +5,24 @@ export default function Countdown({
     ms = 60_000,
     onEnd,
 }: { ms?: number; onEnd: () => void }) {
-    const start = useRef<number | null>(null);
+    const onEndRef = useRef(onEnd);
+    useEffect(() => { onEndRef.current = onEnd; }, [onEnd]);
+
     const [left, setLeft] = useState(ms);
 
     useEffect(() => {
-        start.current = performance.now();
+        const start = performance.now();
         const id = setInterval(() => {
-            const elapsed = performance.now() - (start.current as number);
+            const elapsed = performance.now() - start;
             const remain = Math.max(0, ms - elapsed);
             setLeft(remain);
-            if (remain <= 0) onEnd();
+            if (remain <= 0) {
+                clearInterval(id);
+                onEndRef.current();
+            }
         }, 100);
         return () => clearInterval(id);
-    }, [ms, onEnd]);
+    }, [ms]); // restart only when ms (or key) changes
 
-    const sec = Math.ceil(left / 1000);
-    return <div aria-label="time-left" className="font-mono">{sec}s</div>;
+    return <div className="font-mono">{Math.ceil(left / 1000)}s</div>;
 }

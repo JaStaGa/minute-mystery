@@ -25,16 +25,22 @@ export function reducer(state: SessionState, action: Action): SessionState {
             if (state.status !== "playing" || !state.target) return state;
             const name = action.name.trim();
             if (!name) return state;
+
             const correct = name.toLowerCase() === state.target.name.toLowerCase();
             if (correct) {
-                // score increments; target changed by "next-target"
-                return { ...state, score: state.score + 1, attempts: [] };
+                // keep winning guess visible, increment score, RESET mistake streak
+                const already = state.attempts.some(a => a.toLowerCase() === name.toLowerCase());
+                const attempts = already ? state.attempts : [...state.attempts, name];
+                return { ...state, score: state.score + 1, attempts, mistakes: 0 };
             }
+
+            // wrong guess: increment mistake streak only once per unique guess
             const already = state.attempts.some(a => a.toLowerCase() === name.toLowerCase());
             const attempts = already ? state.attempts : [...state.attempts, name];
             const mistakes = already ? state.mistakes : state.mistakes + 1;
             return { ...state, attempts, mistakes };
         }
+
         case "next-target":
             if (state.status !== "playing") return state;
             return { ...state, target: action.target, attempts: [] };

@@ -1,0 +1,264 @@
+/* Fonts are route-local so other games aren’t affected */
+@font-face {
+    font-family: "Marauders Map";
+    src: url("/fonts/MaraudersMap.ttf") format("truetype");
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Harry P Font";
+    src: url("/fonts/HarryP-MVZ6w.ttf") format("truetype");
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Root scope for this route only. Apply HP base font + color */
+.hpRoot {
+    color: #4b2e2e;
+    font-family: "Marauders Map", serif;
+    background-color: #ad8b59;
+    background-image: url("https://www.transparenttextures.com/patterns/paper-fibers.png");
+}
+
+/* === ScrM.css → scoped === */
+.hpRoot :global(.start-text) {
+    font-family: "Harry P Font", serif;
+    font-size: 600%;
+    text-align: center;
+    margin-bottom: 20px;
+    color: #4b2e2e;
+}
+
+.hpRoot :global(.start-title) {
+    font-family: "Harry P Font", serif;
+    font-size: 400%;
+    text-align: center;
+    margin-bottom: 20px;
+    color: #4b2e2e;
+}
+
+.hpRoot :global(.main-game) {
+    margin: 0;
+    text-align: center;
+    font-family: "Marauders Map", serif;
+    color: #4b2e2e;
+}
+
+.hpRoot :global(.main-game h1) {
+    font-size: 50%;
+    margin-bottom: 1rem;
+}
+
+.hpRoot :global(.marauders-container) {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 75vh;
+    padding: 1rem;
+}
+
+.hpRoot :global(.main-container) {
+    opacity: 0;
+    filter: blur(6px);
+    transition: opacity 1s ease, filter 1s ease;
+    pointer-events: none;
+}
+
+.hpRoot :global(.marauders-container:hover .main-container) {
+    opacity: 1;
+    filter: blur(0);
+    pointer-events: auto;
+}
+
+/* Character reveal panel */
+.hpRoot :global(.character-reveal-box) {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    background-color: #d3ba93;
+    border: 1px solid #a47148;
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1rem auto;
+    max-width: 600px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    font-family: "Marauders Map", serif;
+    color: #4b2e2e;
+}
+
+.hpRoot :global(.character-image) {
+    flex-shrink: 0;
+    width: 150px;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 4px;
+    background: #eee;
+}
+
+.hpRoot :global(.character-info) {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    flex: 1;
+}
+
+.hpRoot :global(.character-info h2) {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.5rem;
+}
+
+.hpRoot :global(.character-info p) {
+    margin: 0.25rem 0;
+    line-height: 1.4;
+}
+
+/* Buttons used across the game */
+.hpRoot :global(.play-button),
+.hpRoot .game-screen button[type="submit"] {
+    padding: 12px 24px;
+    font-size: 100%;
+    font-family: "Marauders Map", serif;
+    background-color: #8b5e3c;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+/* Mobile tweaks from ScrM.css */
+@media (max-width: 600px) {
+    .hpRoot :global(.marauders-container) {
+        padding: 1rem;
+    }
+
+    .hpRoot :global(.start-text) {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+    }
+
+    .hpRoot :global(.start-title) {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+
+    .hpRoot :global(.main-game) {
+        margin: 0;
+    }
+
+    .hpRoot :global(.marauders-container h1) {
+        font-size: 3rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .hpRoot :global(h2) {
+        font-size: 110%;
+    }
+
+    .hpRoot :global(p) {
+        font-size: 80%;
+    }
+}
+
+/* === GuessLog.css → scoped === */
+.hpRoot :global(.guess-log) {
+    background-color: #d3ba93;
+    border: 1px solid #4b2e2e;
+    padding: 16px;
+    margin-top: 20px;
+    font-family: "Marauders Map", serif;
+    color: #4b2e2e;
+    border-radius: 8px;
+}
+
+.hpRoot :global(.name-cell) {
+    background-color: #8b5e3c;
+}
+
+.hpRoot :global(.guess-log-wrapper) {
+    width: 100%;
+    max-width: 750px;
+    align-self: center;
+    overflow-x: auto;
+    overflow-y: hidden;
+    margin: 0 auto;
+    box-sizing: border-box;
+    -webkit-overflow-scrolling: touch;
+}
+
+.hpRoot :global(.guess-log-wrapper) table {
+    width: 100%;
+}
+
+@media (max-width: 750px) {
+    .hpRoot :global(.guess-log-wrapper) {
+        padding: 1%;
+        width: 100%;
+        align-self: center;
+    }
+
+    .hpRoot :global(.guess-log-wrapper) table {
+        width: 100%;
+        min-width: auto;
+        align-self: center;
+    }
+}
+
+/* === InputBox.css → scoped and slightly generalized === */
+/* If your InputBox renders inside .game-screen, these will style it. */
+.hpRoot .game-screen form {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.hpRoot .game-screen input[type="text"],
+.hpRoot .game-screen input[type="search"],
+.hpRoot .game-screen input[name="guess"] {
+    padding: 10px 12px;
+    border: 1px solid #a47148;
+    border-radius: 8px;
+    font-family: "Marauders Map", serif;
+    font-size: 1rem;
+    color: #4b2e2e;
+    background: #fff7ec;
+    outline: none;
+}
+
+.hpRoot .game-screen input::placeholder {
+    color: #a47148;
+    opacity: 0.8;
+}
+
+.hpRoot .game-screen button[type="button"] {
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-family: "Marauders Map", serif;
+}
+
+/* Optional class-targets if your InputBox uses them */
+.hpRoot :global(.silhouette-button) {
+    background: #d3ba93;
+    color: #4b2e2e;
+    border: 1px solid #a47148;
+}
+
+/* Table cell highlight used by your styled-components HintCell */
+.hpRoot :global(td.bg-lime),
+.hpRoot :global(.hint-match) {
+    background-color: limegreen;
+    color: black;
+}
+
+/* Keep the old general heading/text color within the route */
+.hpRoot h1,
+.hpRoot h2,
+.hpRoot p {
+    color: #4b2e2e;
+}
