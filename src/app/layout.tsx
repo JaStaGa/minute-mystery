@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import UserMenu from "@/components/user-menu";
+import Link from "next/link";
 
 export const viewport: Viewport = { themeColor: "#0b0b0d" };
 
@@ -20,7 +21,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className="dark">
       <body>
         <header className="p-4 flex items-center justify-between">
-          <h1 className="font-semibold">Minute Mystery</h1>
+          <Link href="/" className="font-semibold tracking-tight hover:opacity-80">
+            Minute Mystery
+          </Link>
           <UserMenu />
         </header>
         {children}

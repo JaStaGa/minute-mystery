@@ -32,6 +32,12 @@
     color: #4b2e2e;
 }
 
+.hpRoot :global(.start-sub) {
+    font-family: "Marauders Map", serif;
+    text-align: center;
+    color: #4b2e2e;
+}
+
 .hpRoot :global(.start-title) {
     font-family: "Harry P Font", serif;
     font-size: 400%;
@@ -128,6 +134,8 @@
     border-radius: 8px;
     cursor: pointer;
     transition: background-color 0.2s ease;
+    display: block;
+    margin: 1rem auto 0 auto;
 }
 
 /* Mobile tweaks from ScrM.css */
@@ -261,4 +269,32 @@
 .hpRoot h2,
 .hpRoot p {
     color: #4b2e2e;
+}
+
+/* additions */
+.hpTitle {
+    font-family: "Harry P Font", serif;
+}
+
+.hpButton {
+    padding: 12px 24px;
+    font-size: 100%;
+    font-family: "Marauders Map", serif;
+    background-color: #8b5e3c;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color .2s ease;
+}
+
+.hpInput {
+    padding: 10px 12px;
+    border: 1px solid #a47148;
+    border-radius: 8px;
+    font-family: "Marauders Map", serif;
+    font-size: 1rem;
+    color: #4b2e2e;
+    background: #fff7ec;
+    outline: none;
 }

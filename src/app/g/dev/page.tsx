@@ -15,6 +15,7 @@ export default function DevGame() {
         attempts: [],
         score: 0,
         mistakes: 0,
+        round: 0,   
     } as SessionState);
 
     useEffect(() => {

@@ -16,8 +16,15 @@ type HPApiRow = {
 };
 
 const toYear = (v: unknown): number | null => {
-    const n = Number(v);
-    return Number.isFinite(n) ? n : null;
+    if (v === null || v === undefined) return null;
+    if (typeof v === "number") return Number.isFinite(v) && v > 0 ? v : null;
+    if (typeof v === "string") {
+        const s = v.trim();
+        if (s === "" || s === "0") return null;
+        const n = Number(s);
+        return Number.isFinite(n) && n > 0 ? n : null;
+    }
+    return null;
 };
 
 const fallback: ReadonlyArray<HPApiRow> = [

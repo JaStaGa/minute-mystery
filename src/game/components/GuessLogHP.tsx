@@ -4,9 +4,10 @@ import { Character } from "@/game/types";
 function eq(a?: string | null, b?: string | null) {
     return (a ?? "").toLowerCase() === (b ?? "").toLowerCase();
 }
+
 function toNum(v: unknown): number | null {
     const n = Number(v);
-    return Number.isFinite(n) ? n : null;
+    return Number.isFinite(n) && n > 0 ? n : null;
 }
 
 export default function GuessLogHP({

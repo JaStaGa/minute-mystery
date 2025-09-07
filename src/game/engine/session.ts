@@ -1,26 +1,35 @@
-import { Character } from "../types";
+import type { Character } from "@/game/types";
 
-export type Status = "idle" | "playing" | "ended";
+export type SessionStatus = "idle" | "playing" | "ended";
 
 export type SessionState = {
-    status: Status;
+    status: SessionStatus;
     target: Character | null;
     attempts: string[];
     score: number;
-    mistakes: number; // stop at 5
+    mistakes: number;      // wrong-in-a-row
+    round: number;         // starts at 1 each run
 };
 
-export type Action =
-    | { type: "start"; target: Character }
-    | { type: "guess"; name: string }
-    | { type: "next-target"; target: Character } // after correct
-    | { type: "end" }
-    | { type: "reset" };
+type Start = { type: "start"; target: Character };
+type Guess = { type: "guess"; name: string };
+type Next = { type: "next-target"; target: Character };
+type End = { type: "end" };
+type Reset = { type: "reset" };
+export type SessionAction = Start | Guess | Next | End | Reset;
 
-export function reducer(state: SessionState, action: Action): SessionState {
+export function reducer(state: SessionState, action: SessionAction): SessionState {
     switch (action.type) {
         case "start":
-            return { status: "playing", target: action.target, attempts: [], score: 0, mistakes: 0 };
+            return {
+                status: "playing",
+                target: action.target,
+                attempts: [],
+                score: 0,
+                mistakes: 0,
+                round: 1,
+            };
+
         case "guess": {
             if (state.status !== "playing" || !state.target) return state;
             const name = action.name.trim();
@@ -28,13 +37,16 @@ export function reducer(state: SessionState, action: Action): SessionState {
 
             const correct = name.toLowerCase() === state.target.name.toLowerCase();
             if (correct) {
-                // keep winning guess visible, increment score, RESET mistake streak
                 const already = state.attempts.some(a => a.toLowerCase() === name.toLowerCase());
                 const attempts = already ? state.attempts : [...state.attempts, name];
-                return { ...state, score: state.score + 1, attempts, mistakes: 0 };
+                return {
+                    ...state,
+                    attempts,
+                    score: state.score + state.round, // score grows by round number
+                    mistakes: 0,                      // reset streak on correct
+                };
             }
 
-            // wrong guess: increment mistake streak only once per unique guess
             const already = state.attempts.some(a => a.toLowerCase() === name.toLowerCase());
             const attempts = already ? state.attempts : [...state.attempts, name];
             const mistakes = already ? state.mistakes : state.mistakes + 1;
@@ -43,16 +55,18 @@ export function reducer(state: SessionState, action: Action): SessionState {
 
         case "next-target":
             if (state.status !== "playing") return state;
-            return { ...state, target: action.target, attempts: [] };
+            return { ...state, target: action.target, attempts: [], round: state.round + 1 };
+
         case "end":
             return { ...state, status: "ended" };
+
         case "reset":
-            return { status: "idle", target: null, attempts: [], score: 0, mistakes: 0 };
+            return { status: "idle", target: null, attempts: [], score: 0, mistakes: 0, round: 0 };
+
         default:
             return state;
     }
 }
 
-export function pickRandom<T>(arr: T[]): T {
-    return arr[Math.floor(Math.random() * arr.length)];
-}
+// helper used elsewhere
+export const pickRandom = <T,>(arr: T[]) => arr[Math.floor(Math.random() * arr.length)];
