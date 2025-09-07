@@ -2,6 +2,8 @@ import type { Character } from "@/game/types";
 
 const HP_API = "https://hp-api.onrender.com/api/characters";
 const HOUSES = new Set(["Gryffindor", "Slytherin", "Hufflepuff", "Ravenclaw"]);
+const INVALID = new Set(["", "-", "—", "unknown", "none", "n/a"]);
+const valid = (s?: string | null) => !INVALID.has((s ?? "").trim().toLowerCase());
 
 type HPApiRow = {
     name?: string | null;
@@ -49,15 +51,25 @@ function normalize(r: HPApiRow): Character {
     };
 }
 
-const keep = (c: Character) =>
-    !!c.name &&
-    HOUSES.has(c.house ?? "") &&
-    !!c.gender &&
-    !!c.hairColour &&
-    !!c.ancestry &&
-    !!c.image &&
-    c.alive !== null &&
-    c.yearOfBirth !== null;
+const keep = (c: Character) => {
+    const name = (c.name ?? "").trim();
+    const house = (c.house ?? "").trim();
+    const gender = (c.gender ?? "").trim();
+    const hair = (c.hairColour ?? "").trim();
+    const ancestry = (c.ancestry ?? "").trim();
+    const image = (c.image ?? "").trim();
+
+    return (
+        valid(name) &&
+        valid(house) && HOUSES.has(house) &&
+        valid(gender) &&
+        valid(hair) &&
+        valid(ancestry) &&
+        valid(image) &&
+        c.alive !== null &&
+        c.yearOfBirth !== null
+    );
+};
 
 export async function fetchHP(): Promise<Character[]> {
     const dedupeSort = (arr: Character[]) => {

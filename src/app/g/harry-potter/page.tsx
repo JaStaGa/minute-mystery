@@ -62,7 +62,7 @@ export default function HPGame() {
                     <div className="max-w-3xl mx-auto space-y-4 game-screen">
                         {/* <h1 className={`${styles.hpTitle} text-2xl font-bold`}>Harry Potter</h1> */}
 
-                        {state.status !== "playing" && <StartScreen onStart={start} />}
+                        {state.status === "idle" && <StartScreen onStart={start} />}
 
                         {state.status === "playing" && state.target && (
                             <div className="space-y-4">
@@ -73,10 +73,14 @@ export default function HPGame() {
                                     <Countdown key={timerKey} ms={60_000} onEnd={() => dispatch({ type: "end" })} />
                                 </div>
 
-                                <form action={onGuess} className="flex gap-2">
+                                <form action={onGuess} className="flex gap-2" autoComplete="off">
                                     <input
                                         name="guess"
                                         list="hp-names"
+                                        autoComplete="off"
+                                        autoCorrect="off"
+                                        autoCapitalize="off"
+                                        spellCheck={false}
                                         className={styles.hpInput}
                                         placeholder="Type a character name…"
                                     />
