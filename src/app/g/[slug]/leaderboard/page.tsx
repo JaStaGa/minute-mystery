@@ -8,14 +8,33 @@ type HS = { user_id: string; score: number; updated_at: string };
 type ProfileRow = { id: string; username: string | null };
 type AnyRec = Record<string, unknown>;
 
-export default function Leaderboard({ params }: { params: { slug: string } }) {
+export default function Leaderboard({
+    params,
+}: {
+    params: Promise<{ slug: string }>;
+}) {
     const supabase = sb();
+
+    const [slug, setSlug] = useState<string | null>(null);
     const [game, setGame] = useState<Game | null>(null);
     const [rows, setRows] = useState<Array<HS & { username: string | null }>>([]);
     const [loading, setLoading] = useState(true);
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+    // Resolve params once
     useEffect(() => {
+        let alive = true;
+        params.then((p) => {
+            if (alive) setSlug(p.slug);
+        });
+        return () => {
+            alive = false;
+        };
+    }, [params]);
+
+    useEffect(() => {
+        if (!slug) return;
+
         (async () => {
             setLoading(true);
             setErrorMsg(null);
@@ -24,7 +43,7 @@ export default function Leaderboard({ params }: { params: { slug: string } }) {
             const { data: g, error: eGame } = await supabase
                 .from("games")
                 .select("id,name")
-                .eq("slug", params.slug)
+                .eq("slug", slug)
                 .maybeSingle();
 
             if (eGame) {
@@ -41,7 +60,7 @@ export default function Leaderboard({ params }: { params: { slug: string } }) {
             const gameRow = g as Game;
             setGame(gameRow);
 
-            // 2) top 10 high scores
+            // 2) top 10 scores
             const { data: hs, error: eHS } = await supabase
                 .from("high_scores")
                 .select("user_id,score,updated_at")
@@ -62,13 +81,12 @@ export default function Leaderboard({ params }: { params: { slug: string } }) {
                 return;
             }
 
-            // 3) usernames for those users
+            // 3) usernames
             const userIds = top.map((r) => r.user_id);
             const { data: profs, error: eProf } = await supabase
                 .from("profiles")
                 .select("id,username")
                 .in("id", userIds);
-
             if (eProf) setErrorMsg(eProf.message);
 
             const asProfiles = (u: unknown): ProfileRow[] => {
@@ -78,14 +96,13 @@ export default function Leaderboard({ params }: { params: { slug: string } }) {
                     username: typeof r.username === "string" ? (r.username as string) : null,
                 }));
             };
-
             const nameById = new Map<string, string | null>();
             asProfiles(profs).forEach((p) => nameById.set(p.id, p.username));
 
             setRows(top.map((r) => ({ ...r, username: nameById.get(r.user_id) ?? null })));
             setLoading(false);
         })();
-    }, [params.slug, supabase]);
+    }, [slug, supabase]);
 
     const title = game ? `${game.name} Leaderboard` : "Leaderboard";
 
@@ -94,7 +111,10 @@ export default function Leaderboard({ params }: { params: { slug: string } }) {
             <div className="max-w-2xl mx-auto space-y-4">
                 <div className="flex items-center justify-between">
                     <h1 className="text-2xl font-bold">{title}</h1>
-                    <Link href={`/g/${params.slug}`} className="px-3 py-2 rounded bg-white text-black">
+                    <Link
+                        href={slug ? `/g/${slug}` : "/"}
+                        className="px-3 py-2 rounded bg-white text-black"
+                    >
                         Back to game
                     </Link>
                 </div>
@@ -117,7 +137,10 @@ export default function Leaderboard({ params }: { params: { slug: string } }) {
                         </thead>
                         <tbody>
                             {rows.map((r, i) => (
-                                <tr key={`${r.user_id}-${r.updated_at}`} className="[&>td]:border [&>td]:border-zinc-700">
+                                <tr
+                                    key={`${r.user_id}-${r.updated_at}`}
+                                    className="[&>td]:border [&>td]:border-zinc-700"
+                                >
                                     <td className="px-3 py-2 text-center">{i + 1}</td>
                                     <td className="px-3 py-2">{r.username ?? r.user_id.slice(0, 8)}</td>
                                     <td className="px-3 py-2 text-center">{r.score}</td>

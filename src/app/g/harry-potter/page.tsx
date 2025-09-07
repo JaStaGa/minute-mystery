@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useReducer, useRef, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
+
 import RequireUsername from "@/components/require-username";
 import Countdown from "@/game/components/Countdown";
 import { reducer, pickRandom } from "@/game/engine/session";
@@ -10,14 +12,10 @@ import type { Character } from "@/game/types";
 import GuessLogHP from "@/game/components/GuessLogHP";
 import StartScreen from "@/game/themes/harry-potter/components/StartScreen";
 import styles from "./hp-theme.module.css";
-import Link from "next/link";
 
 import { sb } from "@/lib/supabase";
-import {
-    getGameId,
-    getPersonalBest,
-    writeScoreAndMaybeBest,
-} from "@/lib/scores";
+import { getGameId, getPersonalBest } from "@/lib/scores";
+import { upsertHighScore } from "@/game/data/highscore";
 
 export default function HPGame() {
     const [all, setAll] = useState<Character[]>([]);
@@ -35,12 +33,13 @@ export default function HPGame() {
         round: 0,
     } as SessionState);
 
-    // scoring persistence
+    // supabase + personal best
     const supabase = sb();
     const [gameId, setGameId] = useState<string | null>(null);
     const [best, setBest] = useState<number | null>(null);
     const savedRef = useRef(false);
 
+    // characters
     useEffect(() => {
         fetchHP().then((cs) => {
             setAll(cs);
@@ -90,14 +89,20 @@ export default function HPGame() {
 
     const ended = state.status === "ended" || state.mistakes >= 5;
 
-    // write score on session end, then refresh personal best
+    // write score on session end via RPC, then refresh personal best
     useEffect(() => {
         const endedNow = state.status === "ended" || state.mistakes >= 5;
-        if (!endedNow || savedRef.current || !gameId) return;
+        if (!endedNow || savedRef.current) return;
         savedRef.current = true;
-        writeScoreAndMaybeBest(supabase, gameId, state.score).then((newBest) => {
-            if (newBest !== null) setBest(newBest);
-        });
+
+        // upsert by slug; then refresh local "best"
+        (async () => {
+            await upsertHighScore(supabase, "harry-potter", state.score);
+            if (gameId) {
+                const pb = await getPersonalBest(supabase, gameId);
+                if (pb !== null) setBest(pb);
+            }
+        })();
     }, [state.status, state.mistakes, state.score, gameId, supabase]);
 
     return (
@@ -108,20 +113,33 @@ export default function HPGame() {
                         {state.status === "idle" && <StartScreen onStart={start} />}
 
                         {state.status === "playing" && state.target && (
-                            <div className="space-y-4">
-                                <div className="flex flex-wrap items-center gap-4">
-                                    <div>Score: <strong>{state.score}</strong></div>
-                                    <div>Round: <strong>{state.round}</strong></div>
-                                    <div>Mistakes: <strong>{state.mistakes}</strong>/5</div>
-                                    {best !== null && <div>Personal Best: <strong>{best}</strong></div>}
-                                    <Countdown key={timerKey} ms={60_000} onEnd={() => dispatch({ type: "end" })} />
+                            <div className="space-y-6">
+                                {/* Title */}
+                                <h1 className={styles.hpTitle}>Harry Potter Guessing Game</h1>
+
+                                {/* Stats bar */}
+                                <div className={`${styles.statsRow}`}>
+                                    <div className={styles.stat}><span className={styles.statLabel}>Score</span> {state.score}</div>
+                                    <div className={styles.stat}><span className={styles.statLabel}>Round</span> {state.round}</div>
+                                    <div className={styles.stat}><span className={styles.statLabel}>Mistakes</span> {state.mistakes}/5</div>
+                                    {best !== null && (
+                                        <div className={styles.stat}><span className={styles.statLabel}>Personal Best</span> {best}</div>
+                                    )}
+                                    <div className={`${styles.stat} ${styles.timer}`}>
+                                        <span className={styles.statLabel}>Time</span>
+                                        <Countdown key={timerKey} ms={60_000} onEnd={() => dispatch({ type: "end" })} />
+                                    </div>
                                 </div>
 
-                                <Link href="/g/harry-potter/leaderboard" className={styles.hpButton}>
-                                    Leaderboard
-                                </Link>
+                                {/* Actions */}
+                                <div className="flex justify-center">
+                                    <Link href="/g/harry-potter/leaderboard" className={styles.hpButton}>
+                                        Leaderboard
+                                    </Link>
+                                </div>
 
-                                <form action={onGuess} className="flex gap-2" autoComplete="off">
+                                {/* Guess form: long input + button below */}
+                                <form action={onGuess} className={styles.formColumn} autoComplete="off">
                                     <input
                                         name="guess"
                                         list="hp-names"
@@ -129,25 +147,25 @@ export default function HPGame() {
                                         autoCorrect="off"
                                         autoCapitalize="off"
                                         spellCheck={false}
-                                        className={styles.hpInput}
+                                        className={`${styles.hpInput} ${styles.hpInputWide}`}
                                         placeholder="Type a character name…"
                                     />
                                     <datalist id="hp-names">
-                                        {all.map((c) => (
-                                            <option key={c.id} value={c.name} />
-                                        ))}
+                                        {all.map((c) => (<option key={c.id} value={c.name} />))}
                                     </datalist>
-                                    <button type="submit" className={styles.hpButton}>
-                                        Guess
-                                    </button>
+                                    <button type="submit" className={styles.hpButton}>Guess</button>
                                 </form>
 
-                                <GuessLogHP target={state.target} characters={all} attempts={state.attempts} />
+                                {/* Guess log */}
+                                <div className={styles.tableWrap}>
+                                    <GuessLogHP target={state.target} characters={all} attempts={state.attempts} />
+                                </div>
 
+                                {/* Correct list (kept as-is) */}
                                 {solved.length > 0 && (
-                                    <div className="space-y-2">
+                                    <div className="space-y-2 text-center">
                                         <h2 className="text-lg font-semibold">Correct this session</h2>
-                                        <ul className="space-y-2">
+                                        <ul className="space-y-2 max-w-2xl mx-auto">
                                             {solved.map((c) => (
                                                 <li
                                                     key={c.id}
@@ -161,7 +179,7 @@ export default function HPGame() {
                                                         className="w-12 h-16 object-cover rounded"
                                                         unoptimized
                                                     />
-                                                    <div className="leading-tight">
+                                                    <div className="leading-tight text-left">
                                                         <div className="font-medium">{c.name}</div>
                                                         <div className="text-sm opacity-80">{c.house}</div>
                                                     </div>
@@ -174,16 +192,18 @@ export default function HPGame() {
                         )}
 
                         {ended && (
-                            <div className="space-y-3">
-                                <div className="text-xl font-semibold">Session ended</div>
-                                <div>Final score: {state.score}</div>
-                                {best !== null && <div>Personal Best: {best}</div>}
-                                <button
-                                    className={styles.hpButton}
-                                    onClick={() => dispatch({ type: "reset" })}
-                                >
-                                    Reset
-                                </button>
+                            <div className="space-y-5 text-center">
+                                <h1 className={styles.hpTitle}>Harry Potter Guessing Game</h1>
+                                <div className={styles.statsRow}>
+                                    <div className={styles.stat}><span className={styles.statLabel}>Final Score</span> {state.score}</div>
+                                    {best !== null && (
+                                        <div className={styles.stat}><span className={styles.statLabel}>Personal Best</span> {best}</div>
+                                    )}
+                                </div>
+                                <div className="flex justify-center gap-3">
+                                    <button className={styles.hpButton} onClick={start}>Play again</button>
+                                    <Link href="/g/harry-potter/leaderboard" className={styles.hpButton}>View leaderboard</Link>
+                                </div>
                             </div>
                         )}
                     </div>

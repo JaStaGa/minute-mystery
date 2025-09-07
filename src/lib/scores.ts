@@ -1,4 +1,4 @@
-import type { SupabaseClient, PostgrestError } from "@supabase/supabase-js";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 export async function getGameId(client: SupabaseClient, slug: string): Promise<string | null> {
     const { data, error } = await client.from("games").select("id").eq("slug", slug).maybeSingle();
@@ -6,13 +6,22 @@ export async function getGameId(client: SupabaseClient, slug: string): Promise<s
     return data?.id ?? null;
 }
 
-export async function getPersonalBest(client: SupabaseClient, gameId: string): Promise<number | null> {
-    const { data, error } = await client
+export async function getPersonalBest(
+    supabase: SupabaseClient,
+    gameId: string
+): Promise<number | null> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
+
+    const { data } = await supabase
         .from("high_scores")
         .select("score")
         .eq("game_id", gameId)
-        .single();
-    if (error && (error as PostgrestError).code !== "PGRST116") console.error("getPersonalBest", error);
+        .eq("user_id", user.id)      // <-- filter by current user
+        .order("score", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
     return data?.score ?? null;
 }
 
