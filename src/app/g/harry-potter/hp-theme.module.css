@@ -354,3 +354,63 @@
     margin-left: auto;
     margin-right: auto;
 }
+
+/* GuessLog (matches original app’s table) */
+.guessWrap {
+    background-color: #d3ba93;
+    border: 1px solid #4b2e2e;
+    padding: 16px;
+    margin-top: 20px;
+    border-radius: 8px;
+    font-family: "Marauders Map", serif;
+    color: #4b2e2e;
+
+    /* wrapper behavior from original */
+    width: 100%;
+    max-width: 750px;
+    margin-left: auto;
+    margin-right: auto;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+}
+
+.guessTable {
+    width: 100%;
+    margin: 0.5rem auto;
+    border-collapse: collapse;
+}
+
+.guessTable th,
+.guessTable td {
+    padding: 16px 10px;
+    border: 1px solid #444;
+    text-align: center;
+    white-space: normal;
+}
+
+.guessTable th {
+    background-color: #222;
+    color: #fff;
+}
+
+/* match mobile sizing from original */
+@media (max-width: 600px) {
+
+    .guessTable th,
+    .guessTable td {
+        font-size: 0.65rem;
+        padding: 8px 2px;
+    }
+}
+
+/* cell colors like original HintCell */
+.hintMatch {
+    background-color: limegreen;
+    color: black;
+}
+
+.hintMiss {
+    background-color: #2a2a2a;
+    color: white;
+}

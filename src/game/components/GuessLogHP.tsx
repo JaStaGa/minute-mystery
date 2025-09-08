@@ -1,13 +1,13 @@
 "use client";
-import { Character } from "@/game/types";
+import type { Character } from "@/game/types";
+import styles from "@/app/g/harry-potter/hp-theme.module.css";
 
 function eq(a?: string | null, b?: string | null) {
     return (a ?? "").toLowerCase() === (b ?? "").toLowerCase();
 }
-
 function toNum(v: unknown): number | null {
-    const n = Number(v);
-    return Number.isFinite(n) && n > 0 ? n : null;
+    if (v === null || v === undefined || v === "" || Number.isNaN(Number(v))) return null;
+    return Number(v);
 }
 
 export default function GuessLogHP({
@@ -20,10 +20,10 @@ export default function GuessLogHP({
     attempts: string[];
 }) {
     return (
-        <div className="overflow-auto">
-            <table className="w-full text-sm border-collapse">
+        <div className={styles.guessWrap}>
+            <table className={styles.guessTable}>
                 <thead>
-                    <tr className="[&>th]:bg-zinc-800 [&>th]:text-white [&>th]:px-3 [&>th]:py-2">
+                    <tr>
                         <th>Name</th>
                         <th>House</th>
                         <th>Gender</th>
@@ -34,46 +34,32 @@ export default function GuessLogHP({
                     </tr>
                 </thead>
                 <tbody>
-                    {attempts.map((name, i) => {
-                        const g = characters.find(
-                            (c) => c.name.toLowerCase() === name.toLowerCase()
-                        );
+                    {attempts.map((attemptName, idx) => {
+                        const g = characters.find(c => c.name?.toLowerCase() === attemptName.toLowerCase());
+
                         const y = toNum(g?.yearOfBirth);
                         const t = toNum(target.yearOfBirth);
                         const yearMatch = y !== null && t !== null && y === t;
-                        const yearText =
-                            y === null || t === null
-                                ? "—"
-                                : y === t
-                                    ? String(y)
-                                    : `${y} ${y > t ? "↓" : "↑"}`;
+                        const yearCell =
+                            y === null || t === null ? "—" : y === t ? String(y) : `${y} ${y > t ? "↓" : "↑"}`;
 
-                        const aliveGuess = g?.alive;
+                        const aliveGuess = g?.alive ?? null;
                         const aliveMatch = aliveGuess !== null && aliveGuess === target.alive;
-                        const aliveText =
-                            aliveGuess === null ? "—" : aliveGuess ? "Alive" : "Deceased";
+                        const aliveCell = aliveGuess === null ? "—" : aliveGuess ? "Alive" : "Deceased";
 
-                        const cell = (match: boolean, v: string) => (
-                            <td
-                                className={`px-3 py-2 text-center ${match ? "bg-lime-400 text-black" : "bg-zinc-800 text-white"
-                                    }`}
-                            >
-                                {v || "—"}
-                            </td>
+                        const td = (match: boolean, v: string) => (
+                            <td className={match ? styles.hintMatch : styles.hintMiss}>{v || "—"}</td>
                         );
 
                         return (
-                            <tr
-                                key={`${name}-${i}`}
-                                className="[&>td]:border [&>td]:border-zinc-700"
-                            >
-                                {cell(eq(g?.name, target.name), g?.name ?? name)}
-                                {cell(eq(g?.house, target.house), g?.house ?? "")}
-                                {cell(eq(g?.gender, target.gender), g?.gender ?? "")}
-                                {cell(yearMatch, yearText)}
-                                {cell(eq(g?.hairColour, target.hairColour), g?.hairColour ?? "")}
-                                {cell(eq(g?.ancestry, target.ancestry), g?.ancestry ?? "")}
-                                {cell(aliveMatch, aliveText)}
+                            <tr key={`${attemptName}-${idx}`}>
+                                {td(Boolean(g?.name) && g!.name.toLowerCase() === target.name.toLowerCase(), g?.name ?? "—")}
+                                {td(eq(g?.house, target.house), g?.house ?? "—")}
+                                {td(eq(g?.gender, target.gender), g?.gender ?? "—")}
+                                {td(yearMatch, yearCell)}
+                                {td(eq(g?.hairColour, target.hairColour), g?.hairColour ?? "—")}
+                                {td(eq(g?.ancestry, target.ancestry), g?.ancestry ?? "—")}
+                                {td(aliveMatch, aliveCell)}
                             </tr>
                         );
                     })}
