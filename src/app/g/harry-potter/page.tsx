@@ -151,7 +151,7 @@ export default function HPGame() {
                                         placeholder="Type a character name…"
                                     />
                                     <datalist id="hp-names">
-                                        {all.map((c) => (<option key={c.id} value={c.name} />))}
+                                        {all.map((c) => (<option key={c.name} value={c.name} />))}
                                     </datalist>
                                     <button type="submit" className={styles.hpButton}>Guess</button>
                                 </form>
@@ -168,7 +168,7 @@ export default function HPGame() {
                                         <ul className="space-y-2 max-w-2xl mx-auto">
                                             {solved.map((c) => (
                                                 <li
-                                                    key={c.id}
+                                                    key={c.name}
                                                     className="flex items-center gap-3 bg-[#d3ba93] border border-[#a47148] rounded p-2 text-[#4b2e2e]"
                                                 >
                                                     <Image
