@@ -5,21 +5,29 @@ import Countdown from "@/game/components/Countdown";
 import { reducer, pickRandom } from "@/game/engine/session";
 import type { SessionState } from "@/game/engine/session";
 import { FakeAdapter } from "@/game/themes/fake/adapter";
+import type { HPFields } from "@/game/types";
 
 export default function DevGame() {
-    const [all, setAll] = useState<{ id: string; name: string }[]>([]);
+    // Use HPFields[] instead of {id,name}[]
+    const [all, setAll] = useState<HPFields[]>([]);
     const [ready, setReady] = useState(false);
+
     const [state, dispatch] = useReducer(reducer, {
         status: "idle",
         target: null,
         attempts: [],
         score: 0,
         mistakes: 0,
-        round: 0,   
+        round: 0,
     } as SessionState);
 
+    // Fetch characters with a typed result
     useEffect(() => {
-        FakeAdapter.fetchCharacters().then(c => { setAll(c); setReady(true); });
+        (async () => {
+            const cs: HPFields[] = await FakeAdapter.fetchCharacters();
+            setAll(cs);
+            setReady(true);
+        })();
     }, []);
 
     function start() {
@@ -37,7 +45,7 @@ export default function DevGame() {
     }
 
     const ended = state.status === "ended" || state.mistakes >= 5;
-    const namesList = all.map(a => a.name).join(", ");
+    const namesList = all.map((c) => c.name).join(", ");
 
     return (
         <RequireUsername>
@@ -54,8 +62,12 @@ export default function DevGame() {
                     {state.status === "playing" && (
                         <div className="space-y-3">
                             <div className="flex items-center gap-4">
-                                <div>Score: <strong>{state.score}</strong></div>
-                                <div>Mistakes: <strong>{state.mistakes}</strong>/5</div>
+                                <div>
+                                    Score: <strong>{state.score}</strong>
+                                </div>
+                                <div>
+                                    Mistakes: <strong>{state.mistakes}</strong>/5
+                                </div>
                                 <Countdown ms={60_000} onEnd={() => dispatch({ type: "end" })} />
                             </div>
 
@@ -63,16 +75,21 @@ export default function DevGame() {
                                 Guess the name exactly. Target is one of: {namesList}
                             </div>
 
-                            <form
-                                action={(fd) => onGuess(fd)}
-                                className="flex gap-2"
-                            >
-                                <input name="guess" className="flex-1 rounded px-3 py-2 text-black" placeholder="Type a name..." />
-                                <button className="px-3 py-2 rounded bg-white text-black" type="submit">Guess</button>
+                            <form action={(fd) => onGuess(fd)} className="flex gap-2">
+                                <input
+                                    name="guess"
+                                    className="flex-1 rounded px-3 py-2 text-black"
+                                    placeholder="Type a name..."
+                                />
+                                <button className="px-3 py-2 rounded bg-white text-black" type="submit">
+                                    Guess
+                                </button>
                             </form>
 
                             <ul className="list-disc pl-6">
-                                {state.attempts.map((a, i) => (<li key={i}>{a}</li>))}
+                                {state.attempts.map((a, i) => (
+                                    <li key={i}>{a}</li>
+                                ))}
                             </ul>
                         </div>
                     )}
@@ -81,8 +98,9 @@ export default function DevGame() {
                         <div className="space-y-3">
                             <div className="text-xl font-semibold">Session ended</div>
                             <div>Final score: {state.score}</div>
-                            <button className="px-4 py-2 rounded bg-white text-black" onClick={() => dispatch({ type: "reset" })}>
-                                Reset
+                            {/* No 'reset' action in reducer; just start again */}
+                            <button className="px-4 py-2 rounded bg-white text-black" onClick={start}>
+                                Start New Session
                             </button>
                         </div>
                     )}

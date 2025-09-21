@@ -1,28 +1,34 @@
-"use client";
-import { useEffect, useRef, useState } from "react";
+'use client'
+import { useEffect, useRef, useState } from 'react'
 
-export default function Countdown({
-    ms = 60_000,
-    onEnd,
-}: { ms?: number; onEnd: () => void }) {
-    const onEndRef = useRef(onEnd);
-    useEffect(() => { onEndRef.current = onEnd; }, [onEnd]);
+type Props = { ms: number; onEnd?: () => void; onTick?: (msLeft: number) => void }
 
-    const [left, setLeft] = useState(ms);
+export default function Countdown({ ms, onEnd, onTick }: Props) {
+    const [left, setLeft] = useState(ms)
+
+    // keep latest callbacks without retriggering the interval
+    const onEndRef = useRef(onEnd)
+    const onTickRef = useRef(onTick)
+    useEffect(() => { onEndRef.current = onEnd }, [onEnd])
+    useEffect(() => { onTickRef.current = onTick }, [onTick])
 
     useEffect(() => {
-        const start = performance.now();
+        setLeft(ms)
+        const started = Date.now()
         const id = setInterval(() => {
-            const elapsed = performance.now() - start;
-            const remain = Math.max(0, ms - elapsed);
-            setLeft(remain);
+            const remain = Math.max(0, ms - (Date.now() - started))
+            setLeft(remain)
+            onTickRef.current?.(remain)
             if (remain <= 0) {
-                clearInterval(id);
-                onEndRef.current();
+                clearInterval(id)
+                onEndRef.current?.()
             }
-        }, 100);
-        return () => clearInterval(id);
-    }, [ms]); // restart only when ms (or key) changes
+        }, 200)
+        return () => clearInterval(id)
+    }, [ms]) // <- only depends on ms
 
-    return <div className="font-mono">{Math.ceil(left / 1000)}s</div>;
+    const totalSeconds = Math.ceil(left / 1000)
+    const mm = String(Math.floor(totalSeconds / 60)).padStart(2, '0')
+    const ss = String(totalSeconds % 60).padStart(2, '0')
+    return <span>{mm}:{ss}</span>
 }

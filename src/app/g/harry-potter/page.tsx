@@ -8,7 +8,7 @@ import Countdown from "@/game/components/Countdown";
 import { reducer, pickRandom } from "@/game/engine/session";
 import type { SessionState } from "@/game/engine/session";
 import { fetchHP } from "@/game/themes/harry-potter/adapter";
-import type { Character } from "@/game/types";
+import type { HPFields } from "@/game/types";
 import GuessLogHP from "@/game/components/GuessLogHP";
 import StartScreen from "@/game/themes/harry-potter/components/StartScreen";
 import styles from "./hp-theme.module.css";
@@ -18,10 +18,13 @@ import { getGameId, getPersonalBest } from "@/lib/scores";
 import { upsertHighScore } from "@/game/data/highscore";
 
 export default function HPGame() {
-    const [all, setAll] = useState<Character[]>([]);
+    const [all, setAll] = useState<HPFields[]>([]);
+    const inputRef = useRef<HTMLInputElement | null>(null);
+    const [typed, setTyped] = useState("");      // controlled input
+    const [msLeft, setMsLeft] = useState(60_000); // for progress bar
     const [ready, setReady] = useState(false);
     const [timerKey, setTimerKey] = useState(0);
-    const [solved, setSolved] = useState<Character[]>([]);
+    const [solved, setSolved] = useState<HPFields[]>([]);
     const advanceTimeout = useRef<number | null>(null);
 
     const [state, dispatch] = useReducer(reducer, {
@@ -60,16 +63,22 @@ export default function HPGame() {
         if (!ready) return;
         savedRef.current = false;
         setSolved([]);
+        setMsLeft(60_000);
         setTimerKey((k) => k + 1);
         dispatch({ type: "start", target: pickRandom(all) });
     }
 
     function onGuess(fd: FormData) {
-        const name = String(fd.get("guess") || "");
-        const target = state.target as Character | null;
+        const name = String(fd.get("guess") || "").trim();
+        if (!name) return; // empty -> ignore
+        const namesLC = new Set(all.map(c => c.name.toLowerCase()));
+        if (!namesLC.has(name.toLowerCase())) return; // not a known character -> ignore
+        if (state.attempts.some(a => a.toLowerCase() === name.toLowerCase())) return; // duplicate -> ignore
+        const target = state.target as HPFields | null;
         const correct = !!target && name.toLowerCase() === target.name.toLowerCase();
 
         dispatch({ type: "guess", name });
+        setTyped(""); // clear field after any submit
 
         if (correct && target) {
             if (advanceTimeout.current) window.clearTimeout(advanceTimeout.current);
@@ -87,7 +96,21 @@ export default function HPGame() {
         };
     }, []);
 
+    // focus input whenever we start/advance
+    useEffect(() => {
+        if (state.status === "playing" && inputRef.current) {
+            inputRef.current.focus();
+        }
+    }, [state.status, state.round]);
+
     const ended = state.status === "ended" || state.mistakes >= 5;
+
+    const liveMsg =
+        ended
+            ? "Session ended."
+            : state.attempts.length
+                ? `Guess ${state.attempts.length} submitted.`
+                : "";
 
     // write score on session end via RPC, then refresh personal best
     useEffect(() => {
@@ -125,11 +148,26 @@ export default function HPGame() {
                                     {best !== null && (
                                         <div className={styles.stat}><span className={styles.statLabel}>Personal Best</span> {best}</div>
                                     )}
-                                    <div className={`${styles.stat} ${styles.timer}`}>
+                                    <div className={styles.stat}>
                                         <span className={styles.statLabel}>Time</span>
-                                        <Countdown key={timerKey} ms={60_000} onEnd={() => dispatch({ type: "end" })} />
+                                        <Countdown
+                                            key={timerKey}
+                                            ms={60_000}
+                                            onEnd={() => dispatch({ type: "end" })}
+                                            onTick={(ms) => setMsLeft(ms)}
+                                        />
                                     </div>
                                 </div>
+
+                                <div className="w-full h-2 rounded bg-white/20 relative overflow-hidden">
+                                    <div
+                                        className="absolute left-0 top-0 h-full bg-[#a47148] transition-[width] duration-100"
+                                        style={{ width: `${Math.max(0, Math.min(100, (1 - msLeft / 60000) * 100))}%` }}
+                                    />
+                                </div>
+
+                                {/* a11y announcements */}
+                                <div aria-live="polite" className="sr-only">{liveMsg}</div>
 
                                 {/* Actions */}
                                 <div className="flex justify-center">
@@ -140,13 +178,18 @@ export default function HPGame() {
 
                                 {/* Guess form: long input + button below */}
                                 <form action={onGuess} className={styles.formColumn} autoComplete="off">
+                                    <label htmlFor="guess" className="sr-only">Guess</label>
                                     <input
+                                        id="guess"
                                         name="guess"
                                         list="hp-names"
                                         autoComplete="off"
                                         autoCorrect="off"
                                         autoCapitalize="off"
                                         spellCheck={false}
+                                        ref={inputRef}
+                                        value={typed}
+                                        onChange={(e) => setTyped(e.target.value)}
                                         className={`${styles.hpInput} ${styles.hpInputWide}`}
                                         placeholder="Type a character name…"
                                     />
@@ -166,9 +209,9 @@ export default function HPGame() {
                                     <div className="space-y-2 text-center">
                                         <h2 className="text-lg font-semibold">Correct this session</h2>
                                         <ul className="space-y-2 max-w-2xl mx-auto">
-                                            {solved.map((c) => (
+                                            {solved.map((c, i) => (
                                                 <li
-                                                    key={c.name}
+                                                    key={`${c.name}-${i}`}
                                                     className="flex items-center gap-3 bg-[#d3ba93] border border-[#a47148] rounded p-2 text-[#4b2e2e]"
                                                 >
                                                     <Image

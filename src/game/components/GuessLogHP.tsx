@@ -1,70 +1,47 @@
-"use client";
-import type { Character } from "@/game/types";
-import styles from "@/app/g/harry-potter/hp-theme.module.css";
+'use client'
+import type { HPFields } from '@/game/types'
+import { getNewSharedTraits } from '@/game/engine/traits'
 
-function eq(a?: string | null, b?: string | null) {
-    return (a ?? "").toLowerCase() === (b ?? "").toLowerCase();
-}
-function toNum(v: unknown): number | null {
-    if (v === null || v === undefined || v === "" || Number.isNaN(Number(v))) return null;
-    return Number(v);
+type Props = {
+    target: HPFields
+    characters: HPFields[]
+    attempts: string[] // raw names in the order guessed
 }
 
-export default function GuessLogHP({
-    target,
-    characters,
-    attempts,
-}: {
-    target: Character;
-    characters: Character[];
-    attempts: string[];
-}) {
+export default function GuessLogHP({ target, characters, attempts }: Props) {
+    // Track prior concrete guesses to avoid repeating traits
+    const prior: HPFields[] = []
+
     return (
-        <div className={styles.guessWrap}>
-            <table className={styles.guessTable}>
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>House</th>
-                        <th>Gender</th>
-                        <th>Year</th>
-                        <th>Hair</th>
-                        <th>Ancestry</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {attempts.map((attemptName, idx) => {
-                        const g = characters.find(c => c.name?.toLowerCase() === attemptName.toLowerCase());
+        <div className="space-y-2">
+            {attempts.map((name, i) => {
+                const guess = characters.find(c => c.name.toLowerCase() === name.toLowerCase())
+                const traits = guess ? getNewSharedTraits({
+                    targetId: target.name,
+                    guesses: [
+                        // build a minimal Round.guesses array ending with this guess
+                        ...prior.map(p => ({ text: p.name, ts: 0 })),
+                        { text: name, ts: 0 }
+                    ],
+                    correct: !!guess && guess.name === target.name,
+                    revealed: false,
+                }) : []
 
-                        const y = toNum(g?.yearOfBirth);
-                        const t = toNum(target.yearOfBirth);
-                        const yearMatch = y !== null && t !== null && y === t;
-                        const yearCell =
-                            y === null || t === null ? "—" : y === t ? String(y) : `${y} ${y > t ? "↓" : "↑"}`;
+                if (guess) prior.push(guess)
 
-                        const aliveGuess = g?.alive ?? null;
-                        const aliveMatch = aliveGuess !== null && aliveGuess === target.alive;
-                        const aliveCell = aliveGuess === null ? "—" : aliveGuess ? "Alive" : "Deceased";
-
-                        const td = (match: boolean, v: string) => (
-                            <td className={match ? styles.hintMatch : styles.hintMiss}>{v || "—"}</td>
-                        );
-
-                        return (
-                            <tr key={`${attemptName}-${idx}`}>
-                                {td(Boolean(g?.name) && g!.name.toLowerCase() === target.name.toLowerCase(), g?.name ?? "—")}
-                                {td(eq(g?.house, target.house), g?.house ?? "—")}
-                                {td(eq(g?.gender, target.gender), g?.gender ?? "—")}
-                                {td(yearMatch, yearCell)}
-                                {td(eq(g?.hairColour, target.hairColour), g?.hairColour ?? "—")}
-                                {td(eq(g?.ancestry, target.ancestry), g?.ancestry ?? "—")}
-                                {td(aliveMatch, aliveCell)}
-                            </tr>
-                        );
-                    })}
-                </tbody>
-            </table>
+                return (
+                    <div key={i} className="grid grid-cols-1 sm:grid-cols-[240px_1fr] gap-2 items-start border rounded p-2 bg-white/5">
+                        <div className="font-medium">Guess {i + 1}: {name}</div>
+                        <div className="flex flex-wrap gap-2">
+                            {traits.length > 0
+                                ? traits.map((t, j) => (
+                                    <span key={j} className="px-2 py-1 text-sm border rounded bg-white/10">{t}</span>
+                                ))
+                                : <span className="text-sm opacity-70">No new shared traits</span>}
+                        </div>
+                    </div>
+                )
+            })}
         </div>
-    );
+    )
 }

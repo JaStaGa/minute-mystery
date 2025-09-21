@@ -1,17 +1,41 @@
-import { Character, ThemeAdapter } from "../../types";
+import type { HPFields } from "@/game/types";
 
-const data: Character[] = [
-    { id: "1", name: "Alice" },
-    { id: "2", name: "Bob" },
-    { id: "3", name: "Carol" },
-    { id: "4", name: "Dave" },
-    { id: "5", name: "Eve" },
+// Tiny in-memory dataset just for /g/dev
+const data: HPFields[] = [
+    {
+        name: "Alice",
+        role: "student",
+        house: "Gryffindor",
+        gender: "female",
+        hair: "brown",
+        ancestry: "muggle-born",
+        image: "",
+        note: "Dev stub",
+    },
+    {
+        name: "Bob",
+        role: "professor",
+        house: "Slytherin",
+        gender: "male",
+        hair: "black",
+        ancestry: "pure-blood",
+        image: "",
+        note: "Dev stub",
+    },
+    {
+        name: "Carol",
+        role: "order member",
+        house: "Ravenclaw",
+        gender: "female",
+        hair: "blonde",
+        ancestry: "half-blood",
+        image: "",
+        note: "Dev stub",
+    },
 ];
 
-export const FakeAdapter: ThemeAdapter = {
-    slug: "dev",
-    title: "Dev Test",
-    async fetchCharacters() {
+export const FakeAdapter = {
+    async fetchCharacters(): Promise<HPFields[]> {
         return data;
     },
 };
