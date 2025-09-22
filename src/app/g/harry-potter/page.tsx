@@ -69,6 +69,7 @@ export default function HPGame() {
     }
 
     function onGuess(fd: FormData) {
+        if (state.status === "ended") return
         const name = String(fd.get("guess") || "").trim();
         if (!name) return; // empty -> ignore
         const namesLC = new Set(all.map(c => c.name.toLowerCase()));

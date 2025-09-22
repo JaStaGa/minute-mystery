@@ -19,7 +19,7 @@ export const characters: HPCharacter[] = [
         gender: 'male',
         hair: 'black',
         ancestry: 'half-blood',
-        image: '',
+        image: '/images/hp/harry-potter.jpg',
         note: 'The Boy Who Lived. You might`ve heard of him.',
     },
     // 2
@@ -30,7 +30,7 @@ export const characters: HPCharacter[] = [
         gender: 'male',
         hair: 'blonde',
         ancestry: 'pure-blood',
-        image: '',
+        image: '/images/hp/neville-longbottom.jpg',
         note: 'Despite having brown hair in the films, J.K. Rowling has stated that Neville is blonde.',
     },
     // 3
@@ -41,7 +41,7 @@ export const characters: HPCharacter[] = [
         gender: 'male',
         hair: 'red',
         ancestry: 'pure-blood',
-        image: '',
+        image: '/images/hp/ron-weasley.avif',
         note: 'Youngest Weasley son in Harry’s year.',
     },
     // 4
@@ -52,7 +52,7 @@ export const characters: HPCharacter[] = [
         gender: 'female',
         hair: 'red',
         ancestry: 'pure-blood',
-        image: '',
+        image: '/images/hp/ginny-weasley.jpg',
         note: 'Chaser for Gryffindor; later a journalist.',
     },
     // 5
@@ -63,7 +63,7 @@ export const characters: HPCharacter[] = [
         gender: 'female',
         hair: 'brown',
         ancestry: 'muggle-born',
-        image: '',
+        image: '/images/hp/hermione-granger.webp',
         note: 'Top of the class and founder of S.P.E.W.',
     },
     // 6
@@ -74,7 +74,7 @@ export const characters: HPCharacter[] = [
         gender: 'male',
         hair: 'blonde',
         ancestry: 'pure-blood',
-        image: '',
+        image: '/images/hp/draco-malfoy.webp',
         note: 'Slytherin seeker and Harry’s rival.',
     },
     // 7
@@ -85,7 +85,7 @@ export const characters: HPCharacter[] = [
         gender: 'male',
         hair: 'brown',
         ancestry: 'pure-blood',
-        image: '',
+        image: '/images/hp/cedric-diggory.jpg',
         note: 'Triwizard champion for Hogwarts.',
     },
     // 8
@@ -96,7 +96,7 @@ export const characters: HPCharacter[] = [
         gender: 'female',
         hair: 'black',
         ancestry: 'half-blood',
-        image: '',
+        image: '/images/hp/cho-chang.jpg',
         note: 'Ravenclaw seeker; D.A. member.',
     },
     // 9
@@ -107,7 +107,7 @@ export const characters: HPCharacter[] = [
         gender: 'female',
         hair: 'blonde',
         ancestry: 'pure-blood',
-        image: '',
+        image: '/images/hp/luna-lovegood.jpg',
         note: 'Quirky Ravenclaw who sees thestrals.',
     },
     // 10
@@ -118,7 +118,7 @@ export const characters: HPCharacter[] = [
         gender: 'male',
         hair: 'brown',
         ancestry: 'half-blood',
-        image: '',
+        image: '/images/hp/remus-lupin.avif',
         note: 'Kind Defense Against the Dark Arts professor; werewolf.',
     },
     // 11
@@ -129,7 +129,7 @@ export const characters: HPCharacter[] = [
         gender: 'male',
         hair: 'black',
         ancestry: 'half-blood',
-        image: '',
+        image: '/images/hp/rubeus-hagrid.webp',
         note: 'Keeper of Keys and Care of Magical Creatures teacher.',
     },
     // 12
@@ -140,7 +140,7 @@ export const characters: HPCharacter[] = [
         gender: 'male',
         hair: 'silver',
         ancestry: 'half-blood',
-        image: '',
+        image: '/images/hp/albus-dumbledore.jpg',
         note: 'Former Transfiguration professor, famed wizard.',
     },
     // 13
@@ -151,7 +151,7 @@ export const characters: HPCharacter[] = [
         gender: 'female',
         hair: 'black',
         ancestry: 'half-blood',
-        image: '',
+        image: '/images/hp/minerva-mcgonagall.webp',
         note: 'Deputy Headmistress and Transfiguration expert.',
     },
     // 14
@@ -162,7 +162,7 @@ export const characters: HPCharacter[] = [
         gender: 'male',
         hair: 'black',
         ancestry: 'half-blood',
-        image: '',
+        image: '/images/hp/severus-snape.webp',
         note: 'Potions master; “The Half-Blood Prince.”',
     },
     // 15
@@ -173,7 +173,7 @@ export const characters: HPCharacter[] = [
         gender: 'female',
         hair: 'brown',
         ancestry: 'half-blood',
-        image: '',
+        image: '/images/hp/dolores-umbridge.avif',
         note: 'Enforces oppressive rules at Hogwarts.',
     },
     // 16
@@ -184,7 +184,7 @@ export const characters: HPCharacter[] = [
         gender: 'male',
         hair: 'red',
         ancestry: 'pure-blood',
-        image: '',
+        image: '/images/hp/arthur-weasley.jpg',
         note: 'Patriarch of the Weasley family.',
     },
     // 17
@@ -195,10 +195,10 @@ export const characters: HPCharacter[] = [
         gender: 'male',
         hair: 'black',
         ancestry: 'pure-blood',
-        image: '',
+        image: '/images/hp/sirius-black.jpg',
         note: 'Harry’s godfather; animagus “Padfoot.”',
     },
-    // 8
+    // 18
     {
         name: 'Lord Voldemort',
         role: 'other',
@@ -206,7 +206,7 @@ export const characters: HPCharacter[] = [
         gender: 'male',
         hair: 'bald',
         ancestry: 'half-blood',
-        image: '',
+        image: '/images/hp/lord-voldemort.webp',
         note: 'Also known as Tom Marvolo Riddle.',
     },
     // 19
@@ -217,7 +217,7 @@ export const characters: HPCharacter[] = [
         gender: 'female',
         hair: 'black',
         ancestry: 'pure-blood',
-        image: '',
+        image: '/images/hp/bellatrix-lestrange.webp',
         note: 'Fiercely loyal to Voldemort.',
     },
     // 20
@@ -228,7 +228,7 @@ export const characters: HPCharacter[] = [
         gender: 'male',
         hair: 'blonde',
         ancestry: 'pure-blood',
-        image: '',
+        image: '/images/hp/lucius-malfoy.jpg',
         note: 'Worst dad ever.',
     },
 ]

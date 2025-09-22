@@ -119,10 +119,21 @@ export function reducer(state: SessionState, action: Action): SessionState {
             return { status: 'playing', target: action.target, attempts: [], score: 0, mistakes: 0, round: 1 }
         case 'guess': {
             const attempts = [...state.attempts, action.name]
-            const correct = state.target && action.name.trim().toLowerCase() === state.target.name.toLowerCase()
-            return correct
-                ? { ...state, attempts, score: state.score + scoreForRound(attempts.length), round: state.round + 1, mistakes: 0 }
-                : { ...state, attempts, mistakes: state.mistakes + 1 }
+            const correct =
+                state.target && action.name.trim().toLowerCase() === state.target.name.toLowerCase()
+            if (correct) {
+                return {
+                    ...state,
+                    attempts,
+                    score: state.score + scoreForRound(attempts.length),
+                    round: state.round + 1,
+                    mistakes: 0,
+                }
+            }
+            const mistakes = state.mistakes + 1
+            return mistakes >= 5
+                ? { ...state, attempts, mistakes, status: 'ended' }
+                : { ...state, attempts, mistakes }
         }
         case 'next-target':
             return { ...state, target: action.target, attempts: [], mistakes: 0 }
