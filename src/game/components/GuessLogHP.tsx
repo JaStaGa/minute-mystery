@@ -6,7 +6,6 @@ import styles from '@/app/g/harry-potter/hp-theme.module.css'
 type Props = { target: HPFields; characters: HPFields[]; attempts: string[] }
 
 export default function GuessLogHP({ target, characters, attempts }: Props) {
-    // Build rows once so we don’t recompute in render
     const rows = attempts.map((name, i) => {
         const guess = characters.find(c => c.name.toLowerCase() === name.toLowerCase())
         const isCorrect = !!guess && guess.name === target.name
@@ -25,23 +24,55 @@ export default function GuessLogHP({ target, characters, attempts }: Props) {
         return { name, traits, isCorrect, idx: i + 1 }
     })
 
+    // theme color
+    const brown = '#4b2e2e'
+
     return (
         <div className={styles.logWrap}>
+            {/* Header row */}
             <div className={styles.logHeadRow}>
-                <div className={styles.logHead}>Guesses</div>
-                <div className={styles.logHead}>Similarities</div>
+                <div
+                    className={styles.logHead}
+                    style={{
+                        textAlign: 'center',
+                        color: brown,
+                        fontSize: 'clamp(0.95rem, 2.8vw, 1.25rem)',
+                        fontWeight: 700,
+                        letterSpacing: '0.04em',
+                    }}
+                >
+                    Guesses
+                </div>
+                <div
+                    className={styles.logHead}
+                    style={{
+                        textAlign: 'center',
+                        color: brown,
+                        fontSize: 'clamp(0.95rem, 2.8vw, 1.25rem)',
+                        fontWeight: 700,
+                        letterSpacing: '0.04em',
+                    }}
+                >
+                    Similarities
+                </div>
             </div>
 
             {rows.map((r, i) => (
                 <div key={i} className={styles.logRow}>
-                    <div className={styles.logGuessCell}>
+                    <div
+                        className={styles.logGuessCell}
+                        style={{ textAlign: 'center', justifyContent: 'center' }}
+                    >
                         <span className={r.isCorrect ? styles.pillSuccessSm : styles.namePill}>
                             <strong className={styles.guessIndex}>{r.idx}:</strong>
                             <span className={styles.guessName}>{r.name}</span>
                         </span>
                     </div>
 
-                    <div className={styles.logTraitsCell}>
+                    <div
+                        className={styles.logTraitsCell}
+                        style={{ textAlign: 'center', justifyContent: 'center' }}
+                    >
                         {r.traits.length ? (
                             r.traits.map((t, j) => (
                                 <span key={j} className={styles.traitPill}>{t}</span>

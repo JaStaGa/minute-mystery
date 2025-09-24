@@ -43,7 +43,6 @@ export default function HPGame() {
     const [best, setBest] = useState<number | null>(null);
     const savedRef = useRef(false);
 
-    // New: track why the run ended and the last missed character
     const [endReason, setEndReason] = useState<EndReason>(null);
     const [lastMissed, setLastMissed] = useState<string | null>(null);
 
@@ -95,7 +94,6 @@ export default function HPGame() {
                 dispatch({ type: "next-target", target: pickRandom(all) });
             }, 1200);
         } else if (!correct && target) {
-            // On a miss, remember the current target as the potential "last missed"
             setLastMissed(target.name);
         }
     }
@@ -110,7 +108,6 @@ export default function HPGame() {
         if (state.status === "playing" && inputRef.current) inputRef.current.focus();
     }, [state.status, state.round]);
 
-    // End the run explicitly when mistakes hit 5
     useEffect(() => {
         if (state.status === "playing" && state.mistakes >= 5) {
             setEndReason("lost");
@@ -119,7 +116,6 @@ export default function HPGame() {
         }
     }, [state.mistakes, state.status, state.target]);
 
-    // Save PB once per run
     useEffect(() => {
         const endedNow = state.status === "ended" || state.mistakes >= 5;
         if (!endedNow || savedRef.current) return;
@@ -133,7 +129,6 @@ export default function HPGame() {
         })();
     }, [state.status, state.mistakes, state.score, gameId, supabase]);
 
-    // Clear input helper + Esc-to-clear
     function clearGuess() {
         setTyped("");
         if (inputRef.current) inputRef.current.focus();
@@ -147,22 +142,32 @@ export default function HPGame() {
     }, []);
 
     const ended = state.status === "ended" || state.mistakes >= 5;
-
     const liveMsg =
         ended ? "Session ended." : state.attempts.length ? `Guess ${state.attempts.length} submitted.` : "";
 
     return (
         <RequireUsername>
             <div className={styles.hpRoot}>
-                <main className="min-h-dvh p-4 text-zinc-100">
-                    <div className="max-w-3xl mx-auto space-y-3 game-screen">
-                        {state.status === "idle" && <StartScreen onStart={start} />}
+                {/* Full viewport height always */}
+                <main className="h-dvh p-4 text-zinc-100">
+                    {/* Ensure inner wrapper fills the height */}
+                    <div className="max-w-3xl mx-auto h-full">
+                        {/* IDLE: center everything, no scroll */}
+                        {state.status === "idle" && (
+                            <div className="h-full grid place-content-center content-center gap-6 overflow-hidden">
+                                <StartScreen onStart={start} />
+                                <div className="flex justify-center">
+                                    <Link href="/g/harry-potter/leaderboard" className={styles.hpButton}>
+                                        Leaderboard
+                                    </Link>
+                                </div>
+                            </div>
+                        )}
 
                         {state.status === "playing" && state.target && (
                             <div className="space-y-4">
                                 <h1 className={styles.hpTitle}>Harry Potter Guessing Game</h1>
 
-                                {/* Compact stats */}
                                 <div className={styles.statsRow}>
                                     <div className={styles.stat}>
                                         <span className={styles.statLabel}>Score</span> {state.score}
@@ -174,7 +179,6 @@ export default function HPGame() {
                                         <span className={styles.statLabel}>Mistakes</span> {state.mistakes}/5
                                     </div>
 
-                                    {/* PB hidden while playing */}
                                     {state.status !== "playing" && best !== null && (
                                         <div className={styles.stat}>
                                             <span className={styles.statLabel}>Personal Best</span> {best}
@@ -187,7 +191,6 @@ export default function HPGame() {
                                             key={timerKey}
                                             ms={60_000}
                                             onEnd={() => {
-                                                // Timeout end path
                                                 setEndReason("timeout");
                                                 if (state.target?.name) setLastMissed(state.target.name);
                                                 dispatch({ type: "end" });
@@ -197,7 +200,6 @@ export default function HPGame() {
                                     </div>
                                 </div>
 
-                                {/* Slim progress bar */}
                                 <div className={styles.progressTrack}>
                                     <div
                                         className={styles.progressFill}
@@ -205,24 +207,16 @@ export default function HPGame() {
                                     />
                                 </div>
 
-                                {/* a11y */}
                                 <div aria-live="polite" className="sr-only">
                                     {liveMsg}
                                 </div>
 
-                                {/* Guess form with clear-X */}
                                 <form action={onGuess} className={styles.formColumn} autoComplete="off">
-                                    <label htmlFor="guess" className="sr-only">Guess</label>
+                                    <label htmlFor="guess" className="sr-only">
+                                        Guess
+                                    </label>
 
-                                    <div
-                                        style={{
-                                            position: "relative",
-                                            display: "flex",
-                                            alignItems: "center",
-                                            width: "100%",
-                                            overflow: "visible",
-                                        }}
-                                    >
+                                    <div style={{ position: "relative", display: "flex", alignItems: "center", width: "100%" }}>
                                         <input
                                             id="guess"
                                             name="guess"
@@ -237,7 +231,7 @@ export default function HPGame() {
                                             className={`${styles.hpInput} ${styles.hpInputWide} ${styles.hpInputFlex}`}
                                             placeholder="Type a character name…"
                                             aria-label="Guess input"
-                                            style={{ paddingRight: 36 }}   // make room for ×
+                                            style={{ paddingRight: 48 }}
                                         />
                                         {typed && (
                                             <button
@@ -256,9 +250,9 @@ export default function HPGame() {
                                                     fontSize: 18,
                                                     lineHeight: 1,
                                                     padding: 4,
+                                                    opacity: 1,
                                                     zIndex: 20,
-                                                    color: "#4b2e2e",   // <— add this
-                                                    opacity: 1,         // <— ensure visible
+                                                    color: "#4b2e2e",
                                                     fontWeight: 700,
                                                 }}
                                             >
@@ -268,18 +262,20 @@ export default function HPGame() {
                                     </div>
 
                                     <datalist id="hp-names">
-                                        {all.map((c) => (<option key={c.name} value={c.name} />))}
+                                        {all.map((c) => (
+                                            <option key={c.name} value={c.name} />
+                                        ))}
                                     </datalist>
 
-                                    <button type="submit" className={styles.hpButtonSm}>Guess</button>
+                                    <button type="submit" className={styles.hpButtonSm}>
+                                        Guess
+                                    </button>
                                 </form>
 
-                                {/* Guess log */}
                                 <div className={styles.tableWrap}>
                                     <GuessLogHP target={state.target} characters={all} attempts={state.attempts} />
                                 </div>
 
-                                {/* Correct list */}
                                 {solved.length > 0 && (
                                     <div className="space-y-2 text-center">
                                         <h2 className="text-lg font-semibold">Correct this session</h2>
@@ -309,14 +305,6 @@ export default function HPGame() {
                             </div>
                         )}
 
-                        {state.status === "idle" && (
-                            <div className="flex justify-center">
-                                <Link href="/g/harry-potter/leaderboard" className={styles.hpButton}>
-                                    Leaderboard
-                                </Link>
-                            </div>
-                        )}
-
                         {ended && (
                             <div
                                 role="dialog"
@@ -330,7 +318,6 @@ export default function HPGame() {
                                     background: "#f3e6cf",
                                 }}
                             >
-                                {/* larger title */}
                                 <h2
                                     id="gameOverTitle"
                                     className={styles.hpTitle}
@@ -339,7 +326,6 @@ export default function HPGame() {
                                     {endReason === "timeout" ? "Time’s up" : "Game over"}
                                 </h2>
 
-                                {/* score + PB */}
                                 <div className={styles.statsRow} style={{ justifyContent: "center" }}>
                                     <div className={styles.stat}>
                                         <span className={styles.statLabel}>Final Score</span> {state.score}
@@ -351,19 +337,12 @@ export default function HPGame() {
                                     )}
                                 </div>
 
-                                {/* full-width MISSED box with centered text + image */}
                                 {lastMissed && (
-                                    <div
-                                        style={{
-                                            width: "100%",
-                                            display: "grid",
-                                            placeItems: "center",
-                                        }}
-                                    >
+                                    <div style={{ width: "100%", display: "grid", placeItems: "center" }}>
                                         <div
                                             style={{
                                                 width: "100%",
-                                                maxWidth: 720, // keeps it readable on wide screens
+                                                maxWidth: 720,
                                                 border: "1px solid #a47148",
                                                 background: "#ead7b7",
                                                 borderRadius: 12,
@@ -382,7 +361,6 @@ export default function HPGame() {
                                                 Missed: {lastMissed}
                                             </div>
 
-                                            {/* small portrait so buttons still fit below */}
                                             {(() => {
                                                 const missed = all.find((c) => c.name === lastMissed);
                                                 const img = missed?.image || "";
@@ -403,7 +381,6 @@ export default function HPGame() {
                                     </div>
                                 )}
 
-                                {/* actions */}
                                 <div className="flex justify-center gap-3">
                                     <button className={styles.hpButton} onClick={start}>
                                         Play again
