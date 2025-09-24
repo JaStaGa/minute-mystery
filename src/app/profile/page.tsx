@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { sb } from "@/lib/supabase";
 import { fetchHP } from "@/game/themes/harry-potter/adapter";
+import { fetchSW } from "@/game/themes/star-wars/adapter";
 
 type ProfileRow = { id: string; username: string | null; icon_url: string | null };
 
@@ -21,6 +22,7 @@ export default function ProfilePage() {
     const [iconUrl, setIconUrl] = useState<string | null>(null);
 
     const [hp, setHp] = useState<{ name: string; image?: string | null }[]>([]);
+    const [sw, setSw] = useState<{ name: string; image?: string | null }[]>([]);
 
     useEffect(() => {
         (async () => {
@@ -51,6 +53,11 @@ export default function ProfilePage() {
                 setHp(hpAll.map((c) => ({ name: c.name, image: c.image })));
             } catch { }
 
+            try {
+                const swAll = await fetchSW();
+                setSw(swAll.map((c) => ({ name: c.name, image: c.image })));
+            } catch { }
+
             setLoading(false);
         })();
     }, [supabase]);
@@ -60,6 +67,12 @@ export default function ProfilePage() {
         const seen = new Set<string>();
         return list.filter((o) => (seen.has(o.image) ? false : (seen.add(o.image), true)));
     }, [hp]);
+
+    const swOptions = useMemo(() => {
+        const list = sw.filter((c) => c.image).map((c) => ({ name: c.name, image: c.image as string }));
+        const seen = new Set<string>();
+        return list.filter((o) => (seen.has(o.image) ? false : (seen.add(o.image), true)));
+    }, [sw]);
 
     async function save() {
         if (!userId) return;
@@ -163,6 +176,34 @@ export default function ProfilePage() {
                             <div className="p-3">
                                 <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-3">
                                     {hpOptions.map((o) => {
+                                        const selected = iconUrl === o.image;
+                                        return (
+                                            <button
+                                                key={o.image}
+                                                type="button"
+                                                onClick={() => setIconUrl(o.image)}
+                                                title={o.name}
+                                                className={`rounded-lg overflow-hidden border ${selected ? "border-zinc-100 ring-2 ring-zinc-300" : "border-zinc-700"} bg-zinc-800`}
+                                            >
+                                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                <img src={o.image} alt={o.name} className="w-full h-16 object-cover" />
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        </details>
+
+                        <details className="rounded-lg border border-zinc-800 group">
+                            <summary className="cursor-pointer select-none px-3 py-2 font-medium text-zinc-200 bg-zinc-950/60 rounded-lg flex items-center justify-between">
+                                <span>Star Wars</span>
+                                <svg aria-hidden="true" viewBox="0 0 20 20" className="h-4 w-4 transition-transform duration-200 group-open:rotate-180">
+                                    <path d="M5 7l5 6 5-6" fill="currentColor" />
+                                </svg>
+                            </summary>
+                            <div className="p-3">
+                                <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-3">
+                                    {swOptions.map((o) => {
                                         const selected = iconUrl === o.image;
                                         return (
                                             <button

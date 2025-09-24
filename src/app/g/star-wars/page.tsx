@@ -150,6 +150,19 @@ export default function SWGame() {
     const liveMsg =
         ended ? "Session ended." : state.attempts.length ? `Guess ${state.attempts.length} submitted.` : "";
 
+    function SafeLetters({ text }: { text: string }) {
+        return (
+            <>
+                {Array.from(text).map((ch, i) => {
+                    const c = ch.toLowerCase();
+                    if (c === "i") return <span key={i} className={styles.fallbackI}>I</span>;
+                    if (c === "u") return <span key={i} className={styles.fallbackU}>{ch}</span>;
+                    return <span key={i}>{ch}</span>;
+                })}
+            </>
+        );
+    }
+
     return (
         <RequireUsername>
             <div className={styles.swRoot}>
@@ -158,7 +171,7 @@ export default function SWGame() {
                         {state.status === "idle" && (
                             <div className="h-full grid place-content-center content-center gap-6 overflow-hidden text-center">
                                 <div className={styles.panel}>
-                                    <h1 className={styles.swTitle}>Star Wars Guessing Game</h1>
+                                    <h1 className={styles.swTitle}>STAR WARS G<span className={styles.fallbackU}>U</span>ESS<span className={styles.fallbackI}>I</span>NG GAME</h1>
                                     <div className="mt-3 flex flex-col items-center gap-3">
                                         <button className={styles.swButton} onClick={start}>Start</button>
                                         <Link href="/g/star-wars/leaderboard" className={styles.swButton}>
@@ -171,15 +184,23 @@ export default function SWGame() {
 
                         {state.status === "playing" && state.target && (
                             <div className="space-y-4">
-                                <h1 className={styles.swTitle}>Star Wars Guessing Game</h1>
+                                <h1 className={styles.swTitle}>STAR WARS G<span className={styles.fallbackU}>U</span>ESS<span className={styles.fallbackI}>I</span>NG GAME</h1>
 
                                 <div className={styles.statsRow}>
-                                    <div className={styles.stat}><span className={styles.statLabel}>Score</span> {state.score}</div>
-                                    <div className={styles.stat}><span className={styles.statLabel}>Round</span> {state.round}</div>
-                                    <div className={styles.stat}><span className={styles.statLabel}>Mistakes</span> {state.mistakes}/5</div>
+                                    <div className={styles.stat}>
+                                        <span className={styles.statLabel}>Score</span> {state.score}
+                                    </div>
+                                    <div className={styles.stat}>
+                                        <span className={styles.statLabel}>Round</span> {state.round}
+                                    </div>
+                                    <div className={styles.stat}>
+                                        <span className={styles.statLabel}>Mistakes</span> {state.mistakes}/5
+                                    </div>
 
                                     {state.status !== "playing" && best !== null && (
-                                        <div className={styles.stat}><span className={styles.statLabel}>Personal Best</span> {best}</div>
+                                        <div className={styles.stat}>
+                                            <span className={styles.statLabel}>Personal Best</span> {best}
+                                        </div>
                                     )}
 
                                     <div className={styles.stat}>
@@ -303,8 +324,12 @@ export default function SWGame() {
                         {ended && (
                             <div role="dialog" aria-labelledby="gameOverTitle" className={`space-y-4 text-center ${styles.endBlock}`}>
                                 <div className={styles.panel}>
-                                    <h2 id="gameOverTitle" className={styles.swTitle} style={{ margin: 0, fontSize: "clamp(1.6rem, 5.5vw, 2.4rem)" }}>
-                                        {endReason === "timeout" ? "Time’s up" : "Game over"}
+                                    <h2
+                                        id="gameOverTitle"
+                                        className={styles.swTitle}
+                                        style={{ margin: 0, fontSize: "clamp(1.6rem, 5.5vw, 2.4rem)" }}
+                                    >
+                                        <SafeLetters text={endReason === "timeout" ? "Time’s up" : "Game over"} />
                                     </h2>
 
                                     <div className={styles.statsRow} style={{ justifyContent: "center", marginTop: 8 }}>

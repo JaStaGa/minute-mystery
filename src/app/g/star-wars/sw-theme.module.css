@@ -1,3 +1,19 @@
+@font-face {
+    font-family: "Star Jedi";
+    src: url("/fonts/sw/Starjedi.ttf") format("truetype");
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Star Jout";
+    src: url("/fonts/sw/Starjout.ttf") format("truetype");
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
 .swRoot {
     background: #000 url("/images/sw/stars.jpg") center/cover fixed no-repeat;
     min-height: 100dvh;
@@ -16,14 +32,19 @@
 
 /* title */
 .swTitle {
-    font-family: var(--font-sw, system-ui);
+    font-family: "Star Jedi", system-ui;
     letter-spacing: .08em;
     text-transform: uppercase;
+    font-variant-ligatures: none;
+    font-feature-settings: "liga" 0, "clig" 0, "dlig" 0, "calt" 0, "kern" 1;
     color: #ffe81f;
     text-shadow: 0 0 10px rgba(255, 232, 31, .25);
     font-size: 28px;
     line-height: 1.1;
 }
+.fallbackU{font-family:system-ui,sans-serif;font-weight:900;letter-spacing:.08em}
+.fallbackI{font-family:system-ui,sans-serif;font-weight:900;letter-spacing:.08em}
+
 
 @media (max-width:360px) {
     .swTitle {
@@ -112,23 +133,28 @@
 
 /* Stats row and pills on dark */
 .statsRow {
-    display: flex;
-    flex-wrap: wrap;
-    gap: .75rem;
-    align-items: center;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    /* 2×2 on mobile */
+    gap: 8px;
+    max-width: 420px;
+    margin: 0.25rem auto 0.5rem auto;
 }
 
 .stat {
-    display: flex;
-    align-items: center;
-    gap: .4rem;
-    padding: .45rem .75rem;
-    border-radius: 12px;
-    background: #2a2219;
-    /* SW-neutral card */
-    border: 1px solid #a47148;
-    /* keep the parchment accent or adjust */
-    color: #f3e7d3;
+    background-color: #0000007d;
+    border: 1px solid #ffe81f;
+    border-radius: 10px;
+    padding: 4px 8px;
+    /* ↓ tighter */
+    min-width: 76px;
+    /* target size */
+    text-align: center;
+    color: #ffe81f;
+    font-family: "Marauders Map", serif;
+    font-size: 0.9rem;
+    /* ↓ smaller font */
+    line-height: 1.1;
 }
 
 .statLabel {
@@ -156,11 +182,12 @@
 }
 
 .swButton {
+    font-family: "Star Jout", system-ui;
     display: inline-block;
     padding: .7rem 1.1rem;
     border-radius: 12px;
-    background: #6b4a34;
-    color: #fff;
+    background: #ffe81f;
+    color: #000000;
     border: 1px solid #a47148;
     text-align: center;
 }
