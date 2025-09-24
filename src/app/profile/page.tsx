@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { sb } from "@/lib/supabase";
 import { fetchHP } from "@/game/themes/harry-potter/adapter";
 
@@ -8,6 +9,8 @@ type ProfileRow = { id: string; username: string | null; icon_url: string | null
 
 export default function ProfilePage() {
     const supabase = sb();
+    const router = useRouter();
+
     const [userId, setUserId] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -16,7 +19,6 @@ export default function ProfilePage() {
     const [username, setUsername] = useState("");
     const [iconUrl, setIconUrl] = useState<string | null>(null);
 
-    // topic assets
     const [hp, setHp] = useState<{ name: string; image?: string | null }[]>([]);
 
     useEffect(() => {
@@ -38,24 +40,19 @@ export default function ProfilePage() {
                 .maybeSingle();
 
             if (error) setErr(error.message);
-
             const row = (prof ?? { username: "", icon_url: null }) as ProfileRow;
             setUsername(row.username ?? "");
             setIconUrl(row.icon_url ?? null);
 
-            // load HP characters
             try {
                 const hpAll = await fetchHP();
                 setHp(hpAll.map((c) => ({ name: c.name, image: c.image })));
-            } catch {
-                // ignore
-            }
+            } catch { }
 
             setLoading(false);
         })();
     }, [supabase]);
 
-    // de-duped image options
     const hpOptions = useMemo(() => {
         const list = hp.filter((c) => c.image).map((c) => ({ name: c.name, image: c.image as string }));
         const seen = new Set<string>();
@@ -70,8 +67,18 @@ export default function ProfilePage() {
             { id: userId, username: username.trim() || null, icon_url: iconUrl ?? null },
             { onConflict: "id" },
         );
-        if (error) setErr(error.message);
         setSaving(false);
+        if (error) {
+            setErr(error.message);
+            return;
+        }
+        // notify header to refresh avatar immediately
+        window.dispatchEvent(new CustomEvent("mm-profile-updated"));
+    }
+
+    async function signOut() {
+        await supabase.auth.signOut();
+        router.push("/auth");
     }
 
     if (loading) {
@@ -98,12 +105,15 @@ export default function ProfilePage() {
             <div className="max-w-4xl mx-auto space-y-6">
                 <div className="flex items-center justify-between">
                     <h1 className="text-3xl font-semibold">Profile</h1>
-                    <Link href="/" className="px-3 py-2 rounded bg-white text-black">Back</Link>
+                    <div className="flex gap-2">
+                        <Link href="/" className="px-3 py-2 rounded bg-white text-black">Back</Link>
+                        <button onClick={signOut} className="px-3 py-2 rounded border border-zinc-700 text-zinc-200">
+                            Sign out
+                        </button>
+                    </div>
                 </div>
 
-                {/* neutral card */}
                 <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
-                    {/* current avatar + username */}
                     <div className="flex items-center gap-4 mb-4">
                         <div className="w-16 h-16 rounded-full overflow-hidden border border-zinc-700 bg-zinc-800 grid place-items-center">
                             {iconUrl ? (
@@ -115,10 +125,7 @@ export default function ProfilePage() {
                         </div>
 
                         <div className="flex-1">
-                            <label
-                                htmlFor="username"
-                                className="block text-base font-medium text-zinc-200 mb-1"
-                            >
+                            <label htmlFor="username" className="block text-base font-medium text-zinc-200 mb-1">
                                 Edit Username
                             </label>
                             <input
@@ -131,24 +138,17 @@ export default function ProfilePage() {
                         </div>
                     </div>
 
-                    {/* topic dropdowns */}
-                    <h2 className="mt-2 mb-1 text-base font-medium text-zinc-200">
-                        Update Profile Image
-                    </h2>
+                    <h2 className="mt-2 mb-1 text-base font-medium text-zinc-200">Update Profile Image</h2>
+
                     <section className="space-y-3">
                         <details className="rounded-lg border border-zinc-800 group">
                             <summary className="cursor-pointer select-none px-3 py-2 font-medium text-zinc-200 bg-zinc-950/60 rounded-lg flex items-center justify-between">
                                 <span>Harry Potter</span>
-                                <svg
-                                    aria-hidden="true"
-                                    viewBox="0 0 20 20"
-                                    className="h-4 w-4 transition-transform duration-200 group-open:rotate-180"
-                                >
+                                <svg aria-hidden="true" viewBox="0 0 20 20" className="h-4 w-4 transition-transform duration-200 group-open:rotate-180">
                                     <path d="M5 7l5 6 5-6" fill="currentColor" />
                                 </svg>
                             </summary>
                             <div className="p-3">
-                                {/* grid of icons */}
                                 <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-3">
                                     {hpOptions.map((o) => {
                                         const selected = iconUrl === o.image;
@@ -168,18 +168,8 @@ export default function ProfilePage() {
                                 </div>
                             </div>
                         </details>
-
-                        {/* Future topics:
-            <details className="rounded-lg border border-zinc-800">
-              <summary className="cursor-pointer select-none list-none px-3 py-2 font-medium text-zinc-200 bg-zinc-950/60 rounded-lg">
-                Star Wars
-              </summary>
-              <div className="p-3">…</div>
-            </details>
-            */}
                     </section>
 
-                    {/* manual URL */}
                     <div className="mt-4">
                         <label htmlFor="iconurl" className="block text-sm text-zinc-300 mb-1">Or paste image URL</label>
                         <input
@@ -191,7 +181,6 @@ export default function ProfilePage() {
                         />
                     </div>
 
-                    {/* actions */}
                     <div className="mt-4 flex gap-3">
                         <button
                             onClick={save}

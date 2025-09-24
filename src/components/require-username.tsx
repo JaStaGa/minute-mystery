@@ -37,26 +37,34 @@ export default function RequireUsername({ children }: { children: React.ReactNod
 
     if (state.kind === "ok") return <>{children}</>;
 
-    // Neutral, site-wide style (NOT the HP theme)
     return (
         <main className="min-h-dvh flex items-center justify-center p-6 font-sans">
-            <Card className="w-full max-w-md bg-zinc-900/50 border-zinc-800 text-zinc-100">
-                <CardHeader>
-                    <CardTitle className="text-2xl">Minute Mystery</CardTitle>
+            <Card className="w-full max-w-md border border-zinc-800 bg-zinc-900/70 text-white shadow-lg"
+                style={{
+                    color: "#fff", // force white for all text inside
+                    fontFamily:
+                        'ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji","Segoe UI Emoji"',
+                }}>
+                <CardHeader className="pb-2">
+                    <CardTitle className="text-2xl tracking-normal">Minute Mystery</CardTitle>
                 </CardHeader>
 
-                <CardContent className="space-y-2">
-                    {state.kind === "loading" && <p className="text-zinc-400">Checking your session…</p>}
+                <CardContent className="space-y-3">
+                    {state.kind === "loading" && <p style={{ opacity: 0.85 }}>Checking your session…</p>}
+
                     {state.kind === "need-sign-in" && (
                         <>
-                            <h2 className="text-lg font-semibold">Sign in to play</h2>
-                            <p className="text-zinc-400">You’ll be able to track scores and appear on leaderboards.</p>
+                            <h2 className="text-lg font-semibold !text-white">Sign in to play</h2>
+                            <p className="text-sm !text-white">
+                                Track scores and appear on leaderboards once you’re signed in.
+                            </p>
                         </>
                     )}
+
                     {state.kind === "need-username" && (
                         <>
                             <h2 className="text-lg font-semibold">Finish your profile</h2>
-                            <p className="text-zinc-400">Choose a username before jumping into the game.</p>
+                            <p className="text-white/80">Choose a username before jumping into the game.</p>
                         </>
                     )}
                 </CardContent>
