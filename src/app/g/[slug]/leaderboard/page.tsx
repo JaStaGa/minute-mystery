@@ -102,6 +102,7 @@ export default function Leaderboard({
 
     const title = game ? `${game.name} Leaderboard` : "Leaderboard";
     const isHP = slug === "harry-potter";
+    const isSW = slug === "star-wars";
 
     if (!isHP) {
         // Original minimal style for non-HP
@@ -124,7 +125,7 @@ export default function Leaderboard({
                     ) : (
                         <table className="w-full border-collapse">
                             <thead>
-                                <tr className="[&>th]:bg-zinc-800 [&>th]:text-white [&>th]:px-3 [&>th]:py-2">
+                                <tr className="[&>th]:bg-zinc-800 [&>th]:text-white [&>th]:px-3 [&>th]:py-2 [&>th]:text-xs">
                                     <th>Rank</th>
                                     <th>Player</th>
                                     <th>Score</th>
@@ -133,9 +134,9 @@ export default function Leaderboard({
                             </thead>
                             <tbody>
                                 {rows.map((r, i) => (
-                                    <tr key={`${r.user_id}-${r.updated_at}`} className="[&>td]:border [&>td]:border-zinc-700">
+                                    <tr key={`${r.user_id}-${r.updated_at}`} className="[&>td]:border [&>td]:border-zinc-700 [&>td]:text-sm">
                                         <td className="px-3 py-2 text-center">{i + 1}</td>
-                                        <td className="px-3 py-2">{r.username ?? r.user_id.slice(0, 8)}</td>
+                                        <td className="px-3 py-2 text-center">{r.username ?? r.user_id.slice(0, 8)}</td>
                                         <td className="px-3 py-2 text-center">{r.score}</td>
                                         <td className="px-3 py-2 text-center">
                                             {r.updated_at ? new Date(r.updated_at).toLocaleDateString() : ""}
@@ -145,6 +146,57 @@ export default function Leaderboard({
                             </tbody>
                         </table>
                     )}
+                </div>
+            </main>
+        );
+    }
+
+    if (isSW) {
+        const yellow = "#ffe81f";
+        const border = "#2b2b2b";
+        return (
+            <main className="min-h-dvh p-4 text-zinc-100">
+                <div className="max-w-4xl mx-auto">
+                    <div className="flex items-start justify-between gap-4 mb-4">
+                        <h1 className="text-3xl font-extrabold tracking-tight" style={{ color: yellow }}>
+                            {title}
+                        </h1>
+                        <Link href="/g/star-wars" className="px-3 py-2 rounded" style={{ background: yellow, color: "#000" }}>
+                            Back to game
+                        </Link>
+                    </div>
+
+                    <div style={{ background: "#0b0b0b", border: `1px solid ${border}`, borderRadius: 12, padding: 14 }}>
+                        <div style={{ overflowX: "auto" }}>
+                            <table style={{ width: "100%", borderCollapse: "separate", borderSpacing: 0, color: "#eee" }}>
+                                <thead>
+                                    <tr style={{ background: "#111", color: yellow, textAlign: "left", fontWeight: 800, letterSpacing: "0.04em" }}>
+                                        {["Rank", "Player", "Score", "Date"].map((h) => (
+                                            <th key={h} style={{ padding: "10px 12px", borderBottom: `1px solid ${border}` }}>{h}</th>
+                                        ))}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {loading ? (
+                                        <tr><td colSpan={4} style={{ padding: "12px", textAlign: "center", opacity: 0.7 }}>Loading…</td></tr>
+                                    ) : rows.length === 0 ? (
+                                        <tr><td colSpan={4} style={{ padding: "12px", textAlign: "center", opacity: 0.7 }}>No scores yet</td></tr>
+                                    ) : (
+                                        rows.map((r, i) => (
+                                            <tr key={`${r.user_id}-${r.updated_at}`} style={{ background: i % 2 ? "#121212" : "#0b0b0b" }}>
+                                                <td style={{ padding: "10px 12px", borderBottom: `1px solid ${border}` }}>{i + 1}</td>
+                                                <td style={{ padding: "10px 12px", borderBottom: `1px solid ${border}` }}>{r.username ?? r.user_id.slice(0, 8)}</td>
+                                                <td style={{ padding: "10px 12px", borderBottom: `1px solid ${border}`, fontWeight: 800 }}>{r.score}</td>
+                                                <td style={{ padding: "10px 12px", borderBottom: `1px solid ${border}` }}>
+                                                    {r.updated_at ? new Date(r.updated_at).toLocaleDateString() : ""}
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </main>
         );

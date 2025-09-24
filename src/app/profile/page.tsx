@@ -12,6 +12,7 @@ export default function ProfilePage() {
     const router = useRouter();
 
     const [userId, setUserId] = useState<string | null>(null);
+    const [email, setEmail] = useState<string>("");
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [err, setErr] = useState<string | null>(null);
@@ -26,6 +27,7 @@ export default function ProfilePage() {
             const { data } = await supabase.auth.getUser();
             const uid = data.user?.id ?? null;
             setUserId(uid);
+            setEmail(data.user?.email ?? "");
 
             if (!uid) {
                 setErr("Not signed in.");
@@ -114,7 +116,7 @@ export default function ProfilePage() {
                 </div>
 
                 <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
-                    <div className="flex items-center gap-4 mb-4">
+                    <div className="flex items-center gap-4">
                         <div className="w-16 h-16 rounded-full overflow-hidden border border-zinc-700 bg-zinc-800 grid place-items-center">
                             {iconUrl ? (
                                 // eslint-disable-next-line @next/next/no-img-element
@@ -125,20 +127,30 @@ export default function ProfilePage() {
                         </div>
 
                         <div className="flex-1">
-                            <label htmlFor="username" className="block text-base font-medium text-zinc-200 mb-1">
-                                Edit Username
-                            </label>
+                            <label className="block text-sm text-zinc-300 mb-1">Email</label>
                             <input
-                                id="username"
-                                value={username}
-                                onChange={(e) => setUsername(e.target.value)}
-                                className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-zinc-100 outline-none focus:ring-2 focus:ring-zinc-600"
-                                placeholder="Enter a username"
+                                value={email}
+                                readOnly
+                                disabled
+                                className="w-full rounded-lg border border-zinc-800 big-zinc-950/60 px-3 py-2 text-zinc-400 cursor-not-allowed"
                             />
-                        </div>
+                        </div>      
+                    </div>                  
+
+                    <div className="mt-4">
+                        <label htmlFor="username" className="block text-base font-medium text-zinc-200 mb-1">
+                            Edit Username
+                        </label>
+                        <input
+                            id="username"
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
+                            className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-zinc-100 outline-none focus:ring-2 focus:ring-zinc-600"
+                            placeholder="Enter a username"
+                        />
                     </div>
 
-                    <h2 className="mt-2 mb-1 text-base font-medium text-zinc-200">Update Profile Image</h2>
+                    <h2 className="mt-5 mb-1 text-base font-medium text-zinc-200">Update Profile Image</h2>
 
                     <section className="space-y-3">
                         <details className="rounded-lg border border-zinc-800 group">

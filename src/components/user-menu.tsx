@@ -10,7 +10,7 @@ export default function UserMenu() {
     const supabase = sb();
     const [uid, setUid] = useState<string | null>(null);
     const [profile, setProfile] = useState<Profile | null>(null);
-    const [version, setVersion] = useState(0); // bust image cache when updated
+    const [version, setVersion] = useState(0); // bust avatar cache after changes
 
     const fetchProfile = useCallback(
         async (id: string) => {
@@ -25,6 +25,7 @@ export default function UserMenu() {
         [supabase],
     );
 
+    // Initial load
     useEffect(() => {
         let active = true;
         (async () => {
@@ -33,14 +34,34 @@ export default function UserMenu() {
             if (!active) return;
             setUid(id);
             if (id) fetchProfile(id);
-            else setProfile(null);
+            else setProfile(null); // show placeholder
         })();
         return () => {
             active = false;
         };
     }, [supabase, fetchProfile]);
 
-    // Update when profile page saves
+    // React to auth changes (sign in/out)
+    useEffect(() => {
+        const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+            const id = session?.user?.id ?? null;
+            if (!id) {
+                // signed out
+                setUid(null);
+                setProfile(null); // clears name + pfp
+                setVersion((v) => v + 1);
+                return;
+            }
+            // signed in or token/user updated
+            setUid(id);
+            fetchProfile(id); // refresh header name + pfp
+        });
+        return () => {
+            sub.subscription.unsubscribe();
+        };
+    }, [supabase, fetchProfile]);
+
+    // React to profile saves from the Profile page
     useEffect(() => {
         function onProfileUpdated() {
             if (uid) fetchProfile(uid);
@@ -49,8 +70,7 @@ export default function UserMenu() {
         return () => window.removeEventListener("mm-profile-updated", onProfileUpdated);
     }, [uid, fetchProfile]);
 
-    const initial =
-        (profile?.username || "").trim().slice(0, 1).toUpperCase() || "?";
+    const initial = (profile?.username || "").trim().slice(0, 1).toUpperCase() || "?";
 
     return (
         <div className="flex items-center gap-3">
@@ -71,9 +91,7 @@ export default function UserMenu() {
                 </div>
             </Link>
             {profile?.username && (
-                <span className="text-sm text-zinc-200 truncate max-w-[10ch]">
-                    {profile.username}
-                </span>
+                <span className="text-sm text-zinc-200 truncate max-w-[10ch]">{profile.username}</span>
             )}
         </div>
     );
