@@ -1,0 +1,24 @@
+import type { SWFields } from '@/game/types'
+
+export const swCharacters: SWFields[] = [
+    { name: 'Obi-Wan Kenobi', role: 'jedi', affiliation: 'jedi-order, republic, rebel-alliance, rebels', type: 'human', forceSensitive: 'Y', weapon: 'saber-blue', era: 'prequel, original', image: '/images/sw/obi-wan.jpg', note: 'Jedi Master, mentor to Anakin and Luke.' },
+    { name: 'Qui-Gon Jinn', role: 'jedi', affiliation: 'jedi-order, republic', type: 'human', forceSensitive: 'Y', weapon: 'saber-green', era: 'prequel', image: '/images/sw/qui-gon.jpg', note: 'Maverick Jedi Master.' },
+    { name: 'Mace Windu', role: 'jedi', affiliation: 'jedi-order, republic', type: 'human', forceSensitive: 'Y', weapon: 'saber-purple', era: 'prequel', image: '/images/sw/mace-windu.jpg', note: 'Jedi Master and Council member.' },
+    { name: 'Yoda', role: 'jedi', affiliation: 'jedi-order, republic, rebel-alliance, rebels', type: 'alien', forceSensitive: 'Y', weapon: 'saber-green', era: 'prequel, original', image: '/images/sw/yoda.jpg', note: 'Grand Master of the Jedi Order.' },
+    { name: 'Luke Skywalker', role: 'jedi', affiliation: 'rebel-alliance, rebels, jedi-order, new-republic', type: 'human', forceSensitive: 'Y', weapon: 'saber-blue, saber-green', era: 'original, sequel', image: '/images/sw/luke.jpg', note: 'Farm boy to Jedi Knight.' },
+    { name: 'Ahsoka Tano', role: 'jedi', affiliation: 'jedi-order, rebel-alliance, rebels', type: 'alien', forceSensitive: 'Y', weapon: 'saber-green, saber-blue, saber-white', era: 'clone-wars, mandalorian-era', image: '/images/sw/ahsoka.jpg', note: 'Anakin’s former padawan.' },
+    { name: 'Darth Vader', role: 'sith', affiliation: 'sith, galactic-empire, imperials', type: 'human', forceSensitive: 'Y', weapon: 'saber-red', era: 'original', image: '/images/sw/vader.jpg', note: 'Sith Lord formerly Anakin Skywalker.' },
+    { name: 'Emperor Palpatine', role: 'sith', affiliation: 'sith, galactic-empire, imperials', type: 'human', forceSensitive: 'Y', weapon: 'saber-red', era: 'prequel, original, sequel', image: '/images/sw/palpatine.jpg', note: 'Darth Sidious.' },
+    { name: 'Count Dooku', role: 'sith', affiliation: 'sith, separatists', type: 'human', forceSensitive: 'Y', weapon: 'saber-red', era: 'prequel', image: '/images/sw/dooku.jpg', note: 'Leader of the Separatists.' },
+    { name: 'Kylo Ren', role: 'sith', affiliation: 'first-order, knights-of-ren, imperials', type: 'human', forceSensitive: 'Y', weapon: 'saber-red', era: 'sequel', image: '/images/sw/kylo.jpg', note: 'Ben Solo, Supreme Leader.' },
+    { name: 'Darth Maul', role: 'sith', affiliation: 'sith', type: 'alien', forceSensitive: 'Y', weapon: 'saber-red', era: 'prequel', image: '/images/sw/maul.jpg', note: 'Zabrak Sith apprentice.' },
+    { name: 'Han Solo', role: 'smuggler', affiliation: 'rebel-alliance, resistance, rebels', type: 'human', forceSensitive: 'N', weapon: 'blaster', era: 'original, sequel', image: '/images/sw/han.jpg', note: 'Corellian smuggler.' },
+    { name: 'Chewbacca', role: 'smuggler', affiliation: 'rebel-alliance, resistance, rebels', type: 'alien', forceSensitive: 'N', weapon: 'blaster', era: 'original, sequel', image: '/images/sw/chewbacca.jpg', note: 'Wookiee co-pilot.' },
+    { name: 'R2-D2', role: 'droid', affiliation: 'republic, rebel-alliance, resistance, rebels', type: 'droid', forceSensitive: 'N', weapon: 'none', era: 'prequel, original, sequel', image: '/images/sw/r2d2.jpg', note: 'Astromech droid.' },
+    { name: 'C-3PO', role: 'droid', affiliation: 'republic, rebel-alliance, resistance, rebels', type: 'droid', forceSensitive: 'N', weapon: 'none', era: 'prequel, original, sequel', image: '/images/sw/c3po.jpg', note: 'Protocol droid.' },
+    { name: 'Din Djarin', role: 'bounty-hunter', affiliation: 'mandalorians, bounty-hunters-guild', type: 'human', forceSensitive: 'N', weapon: 'blaster', era: 'mandalorian-era', image: '/images/sw/din.jpg', note: 'The Mandalorian.' },
+    { name: 'Boba Fett', role: 'bounty-hunter', affiliation: 'mandalorians, bounty-hunters-guild', type: 'human', forceSensitive: 'N', weapon: 'blaster', era: 'original, mandalorian-era', image: '/images/sw/boba.jpg', note: 'Infamous bounty hunter.' },
+    { name: 'Princess Leia', role: 'officer', affiliation: 'rebel-alliance, new-republic, resistance, rebels', type: 'human', forceSensitive: 'Y', weapon: 'blaster', era: 'original, sequel', image: '/images/sw/leia.jpg', note: 'Leader and Force-sensitive.' },
+    { name: 'Captain Rex', role: 'officer', affiliation: 'republic, rebel-alliance, rebels', type: 'human', forceSensitive: 'N', weapon: 'blaster', era: 'clone-wars, original', image: '/images/sw/rex.jpg', note: 'Clone captain.' },
+    { name: 'General Grievous', role: 'officer', affiliation: 'separatists', type: 'alien', forceSensitive: 'N', weapon: 'saber-green, saber-blue', era: 'prequel', image: '/images/sw/grievous.jpg', note: 'Cyborg general.' },
+]

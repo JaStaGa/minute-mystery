@@ -20,8 +20,8 @@ import { upsertHighScore } from "@/game/data/highscore";
 export default function HPGame() {
     const [all, setAll] = useState<HPFields[]>([]);
     const inputRef = useRef<HTMLInputElement | null>(null);
-    const [typed, setTyped] = useState("");      // controlled input
-    const [msLeft, setMsLeft] = useState(60_000); // for progress bar
+    const [typed, setTyped] = useState("");
+    const [msLeft, setMsLeft] = useState(60_000);
     const [ready, setReady] = useState(false);
     const [timerKey, setTimerKey] = useState(0);
     const [solved, setSolved] = useState<HPFields[]>([]);
@@ -36,13 +36,11 @@ export default function HPGame() {
         round: 0,
     } as SessionState);
 
-    // supabase + personal best
     const supabase = sb();
     const [gameId, setGameId] = useState<string | null>(null);
     const [best, setBest] = useState<number | null>(null);
     const savedRef = useRef(false);
 
-    // characters
     useEffect(() => {
         fetchHP().then((cs) => {
             setAll(cs);
@@ -50,7 +48,6 @@ export default function HPGame() {
         });
     }, []);
 
-    // resolve game id + current personal best
     useEffect(() => {
         (async () => {
             const id = await getGameId(supabase, "harry-potter");
@@ -69,17 +66,18 @@ export default function HPGame() {
     }
 
     function onGuess(fd: FormData) {
-        if (state.status === "ended") return
+        if (state.status === "ended") return;
         const name = String(fd.get("guess") || "").trim();
-        if (!name) return; // empty -> ignore
-        const namesLC = new Set(all.map(c => c.name.toLowerCase()));
-        if (!namesLC.has(name.toLowerCase())) return; // not a known character -> ignore
-        if (state.attempts.some(a => a.toLowerCase() === name.toLowerCase())) return; // duplicate -> ignore
+        if (!name) return;
+        const namesLC = new Set(all.map((c) => c.name.toLowerCase()));
+        if (!namesLC.has(name.toLowerCase())) return;
+        if (state.attempts.some((a) => a.toLowerCase() === name.toLowerCase())) return;
+
         const target = state.target as HPFields | null;
         const correct = !!target && name.toLowerCase() === target.name.toLowerCase();
 
         dispatch({ type: "guess", name });
-        setTyped(""); // clear field after any submit
+        setTyped("");
 
         if (correct && target) {
             if (advanceTimeout.current) window.clearTimeout(advanceTimeout.current);
@@ -90,36 +88,25 @@ export default function HPGame() {
         }
     }
 
-    // cleanup pending timeout
     useEffect(() => {
         return () => {
             if (advanceTimeout.current) window.clearTimeout(advanceTimeout.current);
         };
     }, []);
 
-    // focus input whenever we start/advance
     useEffect(() => {
-        if (state.status === "playing" && inputRef.current) {
-            inputRef.current.focus();
-        }
+        if (state.status === "playing" && inputRef.current) inputRef.current.focus();
     }, [state.status, state.round]);
 
     const ended = state.status === "ended" || state.mistakes >= 5;
 
     const liveMsg =
-        ended
-            ? "Session ended."
-            : state.attempts.length
-                ? `Guess ${state.attempts.length} submitted.`
-                : "";
+        ended ? "Session ended." : state.attempts.length ? `Guess ${state.attempts.length} submitted.` : "";
 
-    // write score on session end via RPC, then refresh personal best
     useEffect(() => {
         const endedNow = state.status === "ended" || state.mistakes >= 5;
         if (!endedNow || savedRef.current) return;
         savedRef.current = true;
-
-        // upsert by slug; then refresh local "best"
         (async () => {
             await upsertHighScore(supabase, "harry-potter", state.score);
             if (gameId) {
@@ -132,23 +119,25 @@ export default function HPGame() {
     return (
         <RequireUsername>
             <div className={styles.hpRoot}>
-                <main className="min-h-dvh p-6 text-zinc-100">
-                    <div className="max-w-3xl mx-auto space-y-4 game-screen">
+                <main className="min-h-dvh p-4 text-zinc-100">
+                    <div className="max-w-3xl mx-auto space-y-3 game-screen">
                         {state.status === "idle" && <StartScreen onStart={start} />}
 
                         {state.status === "playing" && state.target && (
-                            <div className="space-y-6">
-                                {/* Title */}
+                            <div className="space-y-4">
                                 <h1 className={styles.hpTitle}>Harry Potter Guessing Game</h1>
 
-                                {/* Stats bar */}
-                                <div className={`${styles.statsRow}`}>
+                                {/* Compact stats */}
+                                <div className={styles.statsRow}>
                                     <div className={styles.stat}><span className={styles.statLabel}>Score</span> {state.score}</div>
                                     <div className={styles.stat}><span className={styles.statLabel}>Round</span> {state.round}</div>
                                     <div className={styles.stat}><span className={styles.statLabel}>Mistakes</span> {state.mistakes}/5</div>
-                                    {best !== null && (
+
+                                    {/* Hide PB while playing; show on idle/ended */}
+                                    {state.status !== "playing" && best !== null && (
                                         <div className={styles.stat}><span className={styles.statLabel}>Personal Best</span> {best}</div>
                                     )}
+
                                     <div className={styles.stat}>
                                         <span className={styles.statLabel}>Time</span>
                                         <Countdown
@@ -160,24 +149,24 @@ export default function HPGame() {
                                     </div>
                                 </div>
 
-                                <div className="w-full h-2 rounded bg-white/20 relative overflow-hidden">
+
+                                {/* Slim progress bar */}
+                                <div className={styles.progressTrack}>
                                     <div
-                                        className="absolute left-0 top-0 h-full bg-[#a47148] transition-[width] duration-100"
+                                        className={styles.progressFill}
                                         style={{ width: `${Math.max(0, Math.min(100, (1 - msLeft / 60000) * 100))}%` }}
                                     />
                                 </div>
 
-                                {/* a11y announcements */}
-                                <div aria-live="polite" className="sr-only">{liveMsg}</div>
-
-                                {/* Actions */}
-                                <div className="flex justify-center">
-                                    <Link href="/g/harry-potter/leaderboard" className={styles.hpButton}>
-                                        Leaderboard
-                                    </Link>
+                                {/* a11y */}
+                                <div aria-live="polite" className="sr-only">
+                                    {liveMsg}
                                 </div>
 
-                                {/* Guess form: long input + button below */}
+                                {/* Hide Leaderboard during play to save vertical space */}
+                                {/* (shown on idle/ended only) */}
+
+                                {/* Compact, responsive form: stacked <360px, inline ≥360px */}
                                 <form action={onGuess} className={styles.formColumn} autoComplete="off">
                                     <label htmlFor="guess" className="sr-only">Guess</label>
                                     <input
@@ -191,13 +180,13 @@ export default function HPGame() {
                                         ref={inputRef}
                                         value={typed}
                                         onChange={(e) => setTyped(e.target.value)}
-                                        className={`${styles.hpInput} ${styles.hpInputWide}`}
+                                        className={`${styles.hpInput} ${styles.hpInputWide} ${styles.hpInputFlex}`}
                                         placeholder="Type a character name…"
                                     />
                                     <datalist id="hp-names">
                                         {all.map((c) => (<option key={c.name} value={c.name} />))}
                                     </datalist>
-                                    <button type="submit" className={styles.hpButton}>Guess</button>
+                                    <button type="submit" className={styles.hpButtonSm}>Guess</button>
                                 </form>
 
                                 {/* Guess log */}
@@ -205,7 +194,7 @@ export default function HPGame() {
                                     <GuessLogHP target={state.target} characters={all} attempts={state.attempts} />
                                 </div>
 
-                                {/* Correct list (kept as-is) */}
+                                {/* Correct list (unchanged) */}
                                 {solved.length > 0 && (
                                     <div className="space-y-2 text-center">
                                         <h2 className="text-lg font-semibold">Correct this session</h2>
@@ -235,18 +224,34 @@ export default function HPGame() {
                             </div>
                         )}
 
+                        {state.status === "idle" && (
+                            <div className="flex justify-center">
+                                <Link href="/g/harry-potter/leaderboard" className={styles.hpButton}>
+                                    Leaderboard
+                                </Link>
+                            </div>
+                        )}
+
                         {ended && (
-                            <div className="space-y-5 text-center">
+                            <div className="space-y-4 text-center">
                                 <h1 className={styles.hpTitle}>Harry Potter Guessing Game</h1>
                                 <div className={styles.statsRow}>
-                                    <div className={styles.stat}><span className={styles.statLabel}>Final Score</span> {state.score}</div>
+                                    <div className={styles.stat}>
+                                        <span className={styles.statLabel}>Final Score</span> {state.score}
+                                    </div>
                                     {best !== null && (
-                                        <div className={styles.stat}><span className={styles.statLabel}>Personal Best</span> {best}</div>
+                                        <div className={styles.stat}>
+                                            <span className={styles.statLabel}>Personal Best</span> {best}
+                                        </div>
                                     )}
                                 </div>
                                 <div className="flex justify-center gap-3">
-                                    <button className={styles.hpButton} onClick={start}>Play again</button>
-                                    <Link href="/g/harry-potter/leaderboard" className={styles.hpButton}>View leaderboard</Link>
+                                    <button className={styles.hpButton} onClick={start}>
+                                        Play again
+                                    </button>
+                                    <Link href="/g/harry-potter/leaderboard" className={styles.hpButton}>
+                                        View leaderboard
+                                    </Link>
                                 </div>
                             </div>
                         )}

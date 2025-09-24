@@ -275,7 +275,7 @@
 .hpTitle {
     font-family: "Harry P Font", serif;
     text-align: center;
-    font-size: clamp(1.75rem, 1.2rem + 2vw, 2.5rem);
+    font-size: clamp(1.4rem, 1rem + 2.4vw, 2rem);
     color: #4b2e2e;
     letter-spacing: 0.5px;
 }
@@ -283,6 +283,19 @@
 .hpButton {
     padding: 12px 24px;
     font-size: 100%;
+    font-family: "Marauders Map", serif;
+    background-color: #8b5e3c;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color .2s ease;
+}
+
+/* Smaller Guess button for mobile */
+.hpButtonSm {
+    padding: 0px 8px;
+    font-size: 0.95rem;
     font-family: "Marauders Map", serif;
     background-color: #8b5e3c;
     color: #fff;
@@ -305,27 +318,51 @@
 
 /* Centered stats row with parchment badges */
 .statsRow {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 10px 12px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    /* 2×2 on mobile */
+    gap: 8px;
+    max-width: 420px;
+    margin: 0.25rem auto 0.5rem auto;
 }
 
 .stat {
     background-color: #d3ba93;
     border: 1px solid #a47148;
     border-radius: 10px;
-    padding: 6px 12px;
+    padding: 4px 8px;
+    /* ↓ tighter */
+    min-width: 76px;
+    /* target size */
+    text-align: center;
     color: #4b2e2e;
     font-family: "Marauders Map", serif;
-    min-width: 110px;
-    text-align: center;
+    font-size: 0.9rem;
+    /* ↓ smaller font */
+    line-height: 1.1;
 }
 
 .statLabel {
     font-variant: small-caps;
     opacity: 0.85;
     margin-right: 6px;
+}
+
+/* Restore the old inline look on wider screens */
+@media (min-width: 641px) {
+    .statsRow {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 10px 12px;
+        max-width: none;
+    }
+
+    .stat {
+        padding: 6px 12px;
+        /* roomier on desktop */
+        font-size: 1rem;
+    }
 }
 
 /* Make the countdown badge look similar */
@@ -338,14 +375,47 @@
 /* Column form: long input then button below */
 .formColumn {
     display: flex;
-    flex-direction: column;
+    gap: 8px;
     align-items: center;
-    gap: 10px;
+    justify-content: center;
+    flex-direction: column;
+    /* stack by default */
+    width: 100%;
+    max-width: 720px;
+    margin: 0 auto;
+}
+
+/* let the input actually grow on the row layout */
+.hpInputFlex {
+    flex: 1;
+    min-width: 0;
+    /* avoid overflow when very long values */
+}
+
+/* the wide width is great when stacked; on row we let flex handle width */
+@media (min-width: 360px) {
+    .formColumn {
+        /* switch to row at 360px */
+        flex-direction: row;
+        align-items: stretch;
+    }
+
+    .hpInputWide {
+        width: auto;
+        /* stop forcing fixed width on row */
+    }
+
+    .hpButtonSm {
+        align-self: stretch;
+        /* match input height visually */
+        padding: 8px 12px;
+        /* a touch smaller */
+    }
 }
 
 /* Wider input but still responsive */
 .hpInputWide {
-    width: min(680px, 100%);
+    width: min(640px, 100%);
 }
 
 /* Center the table area */
@@ -445,4 +515,161 @@
     border: 1px solid #2f7a34;
     background: #2f7a34;
     color: #e8faee;
+}
+
+/* ----- Compact two-column Guess Log ----- */
+.logWrap {
+    display: grid;
+    gap: 10px;
+    font-size: 0.9rem;
+    /* smaller overall */
+}
+
+.logHeadRow {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    padding-inline: 2px;
+}
+
+.logHead {
+    font-variant: small-caps;
+    opacity: .9;
+    padding: 2px 4px;
+}
+
+/* rows */
+.logRow {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    align-items: start;
+}
+
+.logGuessCell,
+.logTraitsCell {
+    background: #d3ba93;
+    /* solid parchment */
+    border: 1px solid #a47148;
+    border-radius: 10px;
+    padding: 8px;
+    /* tighter */
+}
+
+/* name pill (left column) */
+.namePill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    max-width: 100%;
+    background: #cfae7f;
+    border: 1px solid #a47148;
+    border-radius: 999px;
+    padding: 4px 10px;
+    line-height: 1;
+    color: #4b2e2e;
+    white-space: nowrap;
+    /* keep on one line */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 0.9rem;
+}
+
+.guessIndex {
+    margin-right: 2px;
+}
+
+.guessName {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* success pill for correct guess */
+.pillSuccessSm {
+    composes: namePill;
+    background: #2f7a34;
+    border-color: #2f7a34;
+    color: #e8faee;
+}
+
+/* trait chips (right column) */
+.traitPill {
+    display: inline-block;
+    background: #e8d7b9;
+    /* solid, not transparent */
+    border: 1px solid #a47148;
+    border-radius: 999px;
+    padding: 4px 10px;
+    line-height: 1;
+    color: #4b2e2e;
+    font-size: 0.85rem;
+    margin: 4px 6px 0 0;
+}
+
+.traitPillMuted {
+    display: inline-block;
+    background: #efe2cc;
+    border: 1px dashed rgba(164, 113, 72, .7);
+    color: rgba(75, 46, 46, .85);
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-size: 0.85rem;
+}
+
+/* stack on very narrow screens */
+@media (max-width: 380px) {
+
+    .logHeadRow,
+    .logRow {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* smaller pills for the log */
+.pillSm {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 10px;
+    border: 1px solid #a47148;
+    background: #d3ba93;
+    color: #4b2e2e;
+    line-height: 1;
+    font-size: 0.85rem;
+}
+
+.pillMutedSm {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 10px;
+    border: 1px solid rgba(164, 113, 72, 0.35);
+    background: rgba(211, 186, 147, 0.15);
+    color: rgba(75, 46, 46, 0.75);
+    font-size: 0.85rem;
+}
+
+.pillSuccessSm {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 10px;
+    border: 1px solid #2f7a34;
+    background: #2f7a34;
+    color: #e8faee;
+    font-size: 0.85rem;
+}
+
+/* Slim progress bar (replaces generic one) */
+.progressTrack {
+    width: 100%;
+    max-width: 720px;
+    height: 6px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.25);
+    overflow: hidden;
+    margin: 4px auto 6px;
+}
+
+.progressFill {
+    height: 100%;
+    background: #a47148;
+    transition: width 120ms linear;
 }

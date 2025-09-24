@@ -44,3 +44,19 @@ export type Session = {
     rounds: Round[]
     score: number
 }
+
+export type SWFields = {
+    name: string
+    role: string
+    affiliation: string      // comma-separated tokens
+    type: 'human' | 'alien' | 'droid'
+    forceSensitive: 'Y' | 'N'
+    weapon: string
+    era: string              // comma-separated tokens
+    image?: string
+    note: string
+}
+export type SWTraitKey = 'role' | 'affiliation' | 'type' | 'forceSensitive' | 'weapon' | 'era'
+export const SW_TRAIT_KEYS: readonly SWTraitKey[] =
+    ['role', 'affiliation', 'type', 'forceSensitive', 'weapon', 'era'] as const
+export const SW_MULTI_KEYS = new Set<SWTraitKey>(['affiliation', 'era', 'weapon'])

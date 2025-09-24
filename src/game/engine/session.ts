@@ -143,3 +143,55 @@ export function reducer(state: SessionState, action: Action): SessionState {
             return state
     }
 }
+
+import type { SWFields } from '@/game/types'
+
+export type SessionStateSW = {
+    status: 'idle' | 'playing' | 'ended'
+    target: SWFields | null
+    attempts: string[]
+    score: number
+    mistakes: number         // mistakes for the current round
+    round: number
+}
+
+type ActionSW =
+    | { type: 'start'; target: SWFields }
+    | { type: 'guess'; name: string }
+    | { type: 'next-target'; target: SWFields }
+    | { type: 'end' }
+
+export function reducerSW(state: SessionStateSW, action: ActionSW): SessionStateSW {
+    switch (action.type) {
+        case 'start':
+            return { status: 'playing', target: action.target, attempts: [], score: 0, mistakes: 0, round: 1 }
+
+        case 'guess': {
+            if (!state.target || state.status !== 'playing') return state;
+
+            const attempts = [...state.attempts, action.name];
+            const correct = action.name.trim().toLowerCase() === state.target.name.toLowerCase();
+
+            if (correct) {
+                // award per-guess score; mistakes stay as-is for this round until next-target resets
+                const gained = scoreForRound(attempts.length);
+                return { ...state, attempts, score: state.score + gained, round: state.round + 1 };
+            }
+
+            // wrong guess -> bump mistakes; end at 5
+            const mistakes = Math.min(5, state.mistakes + 1);
+            const status = mistakes >= 5 ? 'ended' : 'playing';
+            return { ...state, attempts, mistakes, status };
+        }
+
+        case 'next-target':
+            // new round -> clear attempts and mistakes
+            return { ...state, target: action.target, attempts: [], mistakes: 0 };
+
+        case 'end':
+            return { ...state, status: 'ended' };
+
+        default:
+            return state;
+    }
+}
