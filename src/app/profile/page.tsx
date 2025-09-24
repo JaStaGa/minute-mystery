@@ -1,86 +1,215 @@
 "use client";
-import { useEffect, useState } from "react";
-import type { PostgrestError } from "@supabase/supabase-js";
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { sb } from "@/lib/supabase";
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { fetchHP } from "@/game/themes/harry-potter/adapter";
+
+type ProfileRow = { id: string; username: string | null; icon_url: string | null };
 
 export default function ProfilePage() {
     const supabase = sb();
     const [userId, setUserId] = useState<string | null>(null);
-    const [email, setEmail] = useState<string | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
+    const [err, setErr] = useState<string | null>(null);
+
     const [username, setUsername] = useState("");
-    const [status, setStatus] = useState<string | null>(null);
+    const [iconUrl, setIconUrl] = useState<string | null>(null);
+
+    // topic assets
+    const [hp, setHp] = useState<{ name: string; image?: string | null }[]>([]);
 
     useEffect(() => {
         (async () => {
             const { data } = await supabase.auth.getUser();
-            const u = data.user;
-            if (!u) return;
-            setUserId(u.id);
-            setEmail(u.email ?? null);
+            const uid = data.user?.id ?? null;
+            setUserId(uid);
 
-            const { data: prof } = await supabase
+            if (!uid) {
+                setErr("Not signed in.");
+                setLoading(false);
+                return;
+            }
+
+            const { data: prof, error } = await supabase
                 .from("profiles")
-                .select("username")
-                .eq("id", u.id)
-                .single();
-            setUsername(prof?.username ?? "");
+                .select("id,username,icon_url")
+                .eq("id", uid)
+                .maybeSingle();
+
+            if (error) setErr(error.message);
+
+            const row = (prof ?? { username: "", icon_url: null }) as ProfileRow;
+            setUsername(row.username ?? "");
+            setIconUrl(row.icon_url ?? null);
+
+            // load HP characters
+            try {
+                const hpAll = await fetchHP();
+                setHp(hpAll.map((c) => ({ name: c.name, image: c.image })));
+            } catch {
+                // ignore
+            }
+
+            setLoading(false);
         })();
     }, [supabase]);
 
-    if (!userId) {
+    // de-duped image options
+    const hpOptions = useMemo(() => {
+        const list = hp.filter((c) => c.image).map((c) => ({ name: c.name, image: c.image as string }));
+        const seen = new Set<string>();
+        return list.filter((o) => (seen.has(o.image) ? false : (seen.add(o.image), true)));
+    }, [hp]);
+
+    async function save() {
+        if (!userId) return;
+        setSaving(true);
+        setErr(null);
+        const { error } = await supabase.from("profiles").upsert(
+            { id: userId, username: username.trim() || null, icon_url: iconUrl ?? null },
+            { onConflict: "id" },
+        );
+        if (error) setErr(error.message);
+        setSaving(false);
+    }
+
+    if (loading) {
         return (
-            <main className="p-6">
-                <p className="text-zinc-200">
-                    Please <a className="underline" href="/auth">sign in</a>.
-                </p>
+            <main className="min-h-dvh p-6 text-zinc-100">
+                <div className="max-w-3xl mx-auto">Loading…</div>
             </main>
         );
     }
 
-    async function save() {
-        setStatus(null);
-        const clean = username.toLowerCase().replace(/[^a-z0-9_]/g, "").slice(0, 20);
-        const { error } = await supabase
-            .from("profiles")
-            .update({ username: clean })
-            .eq("id", userId);
-
-        if (error) {
-            const code = (error as PostgrestError).code;
-            if (code === "23505") setStatus("Username is taken.");
-            else setStatus(error.message);
-        } else {
-            setUsername(clean);
-            setStatus("Saved.");
-        }
+    if (err) {
+        return (
+            <main className="min-h-dvh p-6 text-zinc-100">
+                <div className="max-w-3xl mx-auto space-y-3">
+                    <p className="text-red-300">{err}</p>
+                    <Link href="/" className="underline">Go home</Link>
+                </div>
+            </main>
+        );
     }
 
     return (
-        <main className="p-6">
-            <Card className="max-w-md">
-                <CardHeader>
-                    <CardTitle>Profile</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                    <div className="text-sm text-zinc-400">Email: {email}</div>
-                    <label className="text-sm">Username</label>
-                    <Input
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
-                        placeholder="e.g. jsg_dev"
-                    />
-                    <p className="text-xs text-zinc-400">
-                        Lowercase letters, numbers, underscore. Max 20.
-                    </p>
-                    {status && <p className="text-sm">{status}</p>}
-                </CardContent>
-                <CardFooter>
-                    <Button onClick={save}>Save</Button>
-                </CardFooter>
-            </Card>
+        <main className="min-h-dvh p-6 text-zinc-100">
+            <div className="max-w-4xl mx-auto space-y-6">
+                <div className="flex items-center justify-between">
+                    <h1 className="text-3xl font-semibold">Profile</h1>
+                    <Link href="/" className="px-3 py-2 rounded bg-white text-black">Back</Link>
+                </div>
+
+                {/* neutral card */}
+                <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
+                    {/* current avatar + username */}
+                    <div className="flex items-center gap-4 mb-4">
+                        <div className="w-16 h-16 rounded-full overflow-hidden border border-zinc-700 bg-zinc-800 grid place-items-center">
+                            {iconUrl ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img src={iconUrl} alt="icon" width={64} height={64} className="w-full h-full object-cover" />
+                            ) : (
+                                <span className="text-lg font-bold">{username?.slice(0, 2) || "?"}</span>
+                            )}
+                        </div>
+
+                        <div className="flex-1">
+                            <label
+                                htmlFor="username"
+                                className="block text-base font-medium text-zinc-200 mb-1"
+                            >
+                                Edit Username
+                            </label>
+                            <input
+                                id="username"
+                                value={username}
+                                onChange={(e) => setUsername(e.target.value)}
+                                className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-zinc-100 outline-none focus:ring-2 focus:ring-zinc-600"
+                                placeholder="Enter a username"
+                            />
+                        </div>
+                    </div>
+
+                    {/* topic dropdowns */}
+                    <h2 className="mt-2 mb-1 text-base font-medium text-zinc-200">
+                        Update Profile Image
+                    </h2>
+                    <section className="space-y-3">
+                        <details className="rounded-lg border border-zinc-800 group">
+                            <summary className="cursor-pointer select-none px-3 py-2 font-medium text-zinc-200 bg-zinc-950/60 rounded-lg flex items-center justify-between">
+                                <span>Harry Potter</span>
+                                <svg
+                                    aria-hidden="true"
+                                    viewBox="0 0 20 20"
+                                    className="h-4 w-4 transition-transform duration-200 group-open:rotate-180"
+                                >
+                                    <path d="M5 7l5 6 5-6" fill="currentColor" />
+                                </svg>
+                            </summary>
+                            <div className="p-3">
+                                {/* grid of icons */}
+                                <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-3">
+                                    {hpOptions.map((o) => {
+                                        const selected = iconUrl === o.image;
+                                        return (
+                                            <button
+                                                key={o.image}
+                                                type="button"
+                                                onClick={() => setIconUrl(o.image)}
+                                                title={o.name}
+                                                className={`rounded-lg overflow-hidden border ${selected ? "border-zinc-100 ring-2 ring-zinc-300" : "border-zinc-700"} bg-zinc-800`}
+                                            >
+                                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                <img src={o.image} alt={o.name} className="w-full h-16 object-cover" />
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        </details>
+
+                        {/* Future topics:
+            <details className="rounded-lg border border-zinc-800">
+              <summary className="cursor-pointer select-none list-none px-3 py-2 font-medium text-zinc-200 bg-zinc-950/60 rounded-lg">
+                Star Wars
+              </summary>
+              <div className="p-3">…</div>
+            </details>
+            */}
+                    </section>
+
+                    {/* manual URL */}
+                    <div className="mt-4">
+                        <label htmlFor="iconurl" className="block text-sm text-zinc-300 mb-1">Or paste image URL</label>
+                        <input
+                            id="iconurl"
+                            value={iconUrl ?? ""}
+                            onChange={(e) => setIconUrl(e.target.value || null)}
+                            placeholder="https://…"
+                            className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-zinc-100 outline-none focus:ring-2 focus:ring-zinc-600"
+                        />
+                    </div>
+
+                    {/* actions */}
+                    <div className="mt-4 flex gap-3">
+                        <button
+                            onClick={save}
+                            disabled={saving}
+                            className="px-4 py-2 rounded-lg bg-zinc-100 text-black font-semibold disabled:opacity-60"
+                        >
+                            {saving ? "Saving…" : "Save changes"}
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setIconUrl(null)}
+                            className="px-4 py-2 rounded-lg border border-zinc-700 text-zinc-200"
+                        >
+                            Remove icon
+                        </button>
+                    </div>
+                </div>
+            </div>
         </main>
     );
 }
