@@ -17,6 +17,8 @@ import { sb } from "@/lib/supabase";
 import { getGameId, getPersonalBest } from "@/lib/scores";
 import { upsertHighScore } from "@/game/data/highscore";
 
+type EndReason = "timeout" | "lost" | null;
+
 export default function HPGame() {
     const [all, setAll] = useState<HPFields[]>([]);
     const inputRef = useRef<HTMLInputElement | null>(null);
@@ -41,6 +43,10 @@ export default function HPGame() {
     const [best, setBest] = useState<number | null>(null);
     const savedRef = useRef(false);
 
+    // New: track why the run ended and the last missed character
+    const [endReason, setEndReason] = useState<EndReason>(null);
+    const [lastMissed, setLastMissed] = useState<string | null>(null);
+
     useEffect(() => {
         fetchHP().then((cs) => {
             setAll(cs);
@@ -60,8 +66,11 @@ export default function HPGame() {
         if (!ready) return;
         savedRef.current = false;
         setSolved([]);
+        setTyped("");
         setMsLeft(60_000);
         setTimerKey((k) => k + 1);
+        setEndReason(null);
+        setLastMissed(null);
         dispatch({ type: "start", target: pickRandom(all) });
     }
 
@@ -85,6 +94,9 @@ export default function HPGame() {
                 setSolved((prev) => [...prev, target]);
                 dispatch({ type: "next-target", target: pickRandom(all) });
             }, 1200);
+        } else if (!correct && target) {
+            // On a miss, remember the current target as the potential "last missed"
+            setLastMissed(target.name);
         }
     }
 
@@ -98,11 +110,16 @@ export default function HPGame() {
         if (state.status === "playing" && inputRef.current) inputRef.current.focus();
     }, [state.status, state.round]);
 
-    const ended = state.status === "ended" || state.mistakes >= 5;
+    // End the run explicitly when mistakes hit 5
+    useEffect(() => {
+        if (state.status === "playing" && state.mistakes >= 5) {
+            setEndReason("lost");
+            if (state.target?.name) setLastMissed(state.target.name);
+            dispatch({ type: "end" });
+        }
+    }, [state.mistakes, state.status, state.target]);
 
-    const liveMsg =
-        ended ? "Session ended." : state.attempts.length ? `Guess ${state.attempts.length} submitted.` : "";
-
+    // Save PB once per run
     useEffect(() => {
         const endedNow = state.status === "ended" || state.mistakes >= 5;
         if (!endedNow || savedRef.current) return;
@@ -115,6 +132,24 @@ export default function HPGame() {
             }
         })();
     }, [state.status, state.mistakes, state.score, gameId, supabase]);
+
+    // Clear input helper + Esc-to-clear
+    function clearGuess() {
+        setTyped("");
+        if (inputRef.current) inputRef.current.focus();
+    }
+    useEffect(() => {
+        function onKey(e: KeyboardEvent) {
+            if (e.key === "Escape") clearGuess();
+        }
+        window.addEventListener("keydown", onKey);
+        return () => window.removeEventListener("keydown", onKey);
+    }, []);
+
+    const ended = state.status === "ended" || state.mistakes >= 5;
+
+    const liveMsg =
+        ended ? "Session ended." : state.attempts.length ? `Guess ${state.attempts.length} submitted.` : "";
 
     return (
         <RequireUsername>
@@ -129,13 +164,21 @@ export default function HPGame() {
 
                                 {/* Compact stats */}
                                 <div className={styles.statsRow}>
-                                    <div className={styles.stat}><span className={styles.statLabel}>Score</span> {state.score}</div>
-                                    <div className={styles.stat}><span className={styles.statLabel}>Round</span> {state.round}</div>
-                                    <div className={styles.stat}><span className={styles.statLabel}>Mistakes</span> {state.mistakes}/5</div>
+                                    <div className={styles.stat}>
+                                        <span className={styles.statLabel}>Score</span> {state.score}
+                                    </div>
+                                    <div className={styles.stat}>
+                                        <span className={styles.statLabel}>Round</span> {state.round}
+                                    </div>
+                                    <div className={styles.stat}>
+                                        <span className={styles.statLabel}>Mistakes</span> {state.mistakes}/5
+                                    </div>
 
-                                    {/* Hide PB while playing; show on idle/ended */}
+                                    {/* PB hidden while playing */}
                                     {state.status !== "playing" && best !== null && (
-                                        <div className={styles.stat}><span className={styles.statLabel}>Personal Best</span> {best}</div>
+                                        <div className={styles.stat}>
+                                            <span className={styles.statLabel}>Personal Best</span> {best}
+                                        </div>
                                     )}
 
                                     <div className={styles.stat}>
@@ -143,12 +186,16 @@ export default function HPGame() {
                                         <Countdown
                                             key={timerKey}
                                             ms={60_000}
-                                            onEnd={() => dispatch({ type: "end" })}
+                                            onEnd={() => {
+                                                // Timeout end path
+                                                setEndReason("timeout");
+                                                if (state.target?.name) setLastMissed(state.target.name);
+                                                dispatch({ type: "end" });
+                                            }}
                                             onTick={(ms) => setMsLeft(ms)}
                                         />
                                     </div>
                                 </div>
-
 
                                 {/* Slim progress bar */}
                                 <div className={styles.progressTrack}>
@@ -163,29 +210,67 @@ export default function HPGame() {
                                     {liveMsg}
                                 </div>
 
-                                {/* Hide Leaderboard during play to save vertical space */}
-                                {/* (shown on idle/ended only) */}
-
-                                {/* Compact, responsive form: stacked <360px, inline ≥360px */}
+                                {/* Guess form with clear-X */}
                                 <form action={onGuess} className={styles.formColumn} autoComplete="off">
                                     <label htmlFor="guess" className="sr-only">Guess</label>
-                                    <input
-                                        id="guess"
-                                        name="guess"
-                                        list="hp-names"
-                                        autoComplete="off"
-                                        autoCorrect="off"
-                                        autoCapitalize="off"
-                                        spellCheck={false}
-                                        ref={inputRef}
-                                        value={typed}
-                                        onChange={(e) => setTyped(e.target.value)}
-                                        className={`${styles.hpInput} ${styles.hpInputWide} ${styles.hpInputFlex}`}
-                                        placeholder="Type a character name…"
-                                    />
+
+                                    <div
+                                        style={{
+                                            position: "relative",
+                                            display: "flex",
+                                            alignItems: "center",
+                                            width: "100%",
+                                            overflow: "visible",
+                                        }}
+                                    >
+                                        <input
+                                            id="guess"
+                                            name="guess"
+                                            list="hp-names"
+                                            autoComplete="off"
+                                            autoCorrect="off"
+                                            autoCapitalize="off"
+                                            spellCheck={false}
+                                            ref={inputRef}
+                                            value={typed}
+                                            onChange={(e) => setTyped(e.target.value)}
+                                            className={`${styles.hpInput} ${styles.hpInputWide} ${styles.hpInputFlex}`}
+                                            placeholder="Type a character name…"
+                                            aria-label="Guess input"
+                                            style={{ paddingRight: 36 }}   // make room for ×
+                                        />
+                                        {typed && (
+                                            <button
+                                                type="button"
+                                                onClick={clearGuess}
+                                                aria-label="Clear input"
+                                                title="Clear"
+                                                style={{
+                                                    position: "absolute",
+                                                    right: 10,
+                                                    top: "50%",
+                                                    transform: "translateY(-50%)",
+                                                    border: "none",
+                                                    background: "transparent",
+                                                    cursor: "pointer",
+                                                    fontSize: 18,
+                                                    lineHeight: 1,
+                                                    padding: 4,
+                                                    zIndex: 20,
+                                                    color: "#4b2e2e",   // <— add this
+                                                    opacity: 1,         // <— ensure visible
+                                                    fontWeight: 700,
+                                                }}
+                                            >
+                                                ×
+                                            </button>
+                                        )}
+                                    </div>
+
                                     <datalist id="hp-names">
                                         {all.map((c) => (<option key={c.name} value={c.name} />))}
                                     </datalist>
+
                                     <button type="submit" className={styles.hpButtonSm}>Guess</button>
                                 </form>
 
@@ -194,7 +279,7 @@ export default function HPGame() {
                                     <GuessLogHP target={state.target} characters={all} attempts={state.attempts} />
                                 </div>
 
-                                {/* Correct list (unchanged) */}
+                                {/* Correct list */}
                                 {solved.length > 0 && (
                                     <div className="space-y-2 text-center">
                                         <h2 className="text-lg font-semibold">Correct this session</h2>
@@ -233,9 +318,29 @@ export default function HPGame() {
                         )}
 
                         {ended && (
-                            <div className="space-y-4 text-center">
-                                <h1 className={styles.hpTitle}>Harry Potter Guessing Game</h1>
-                                <div className={styles.statsRow}>
+                            <div
+                                role="dialog"
+                                aria-labelledby="gameOverTitle"
+                                className="space-y-4 text-center"
+                                style={{
+                                    marginTop: 12,
+                                    padding: 16,
+                                    borderRadius: 12,
+                                    border: "1px solid #a47148",
+                                    background: "#f3e6cf",
+                                }}
+                            >
+                                {/* larger title */}
+                                <h2
+                                    id="gameOverTitle"
+                                    className={styles.hpTitle}
+                                    style={{ margin: 0, fontSize: "clamp(1.6rem, 5.5vw, 2.4rem)" }}
+                                >
+                                    {endReason === "timeout" ? "Time’s up" : "Game over"}
+                                </h2>
+
+                                {/* score + PB */}
+                                <div className={styles.statsRow} style={{ justifyContent: "center" }}>
                                     <div className={styles.stat}>
                                         <span className={styles.statLabel}>Final Score</span> {state.score}
                                     </div>
@@ -245,6 +350,60 @@ export default function HPGame() {
                                         </div>
                                     )}
                                 </div>
+
+                                {/* full-width MISSED box with centered text + image */}
+                                {lastMissed && (
+                                    <div
+                                        style={{
+                                            width: "100%",
+                                            display: "grid",
+                                            placeItems: "center",
+                                        }}
+                                    >
+                                        <div
+                                            style={{
+                                                width: "100%",
+                                                maxWidth: 720, // keeps it readable on wide screens
+                                                border: "1px solid #a47148",
+                                                background: "#ead7b7",
+                                                borderRadius: 12,
+                                                padding: 12,
+                                            }}
+                                        >
+                                            <div
+                                                style={{
+                                                    textTransform: "uppercase",
+                                                    letterSpacing: "0.06em",
+                                                    fontWeight: 600,
+                                                    textAlign: "center",
+                                                    color: "#a47148",
+                                                }}
+                                            >
+                                                Missed: {lastMissed}
+                                            </div>
+
+                                            {/* small portrait so buttons still fit below */}
+                                            {(() => {
+                                                const missed = all.find((c) => c.name === lastMissed);
+                                                const img = missed?.image || "";
+                                                return img ? (
+                                                    <div style={{ marginTop: 8, display: "grid", placeItems: "center" }}>
+                                                        <Image
+                                                            src={img}
+                                                            alt={lastMissed}
+                                                            width={96}
+                                                            height={128}
+                                                            className="rounded object-cover"
+                                                            unoptimized
+                                                        />
+                                                    </div>
+                                                ) : null;
+                                            })()}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* actions */}
                                 <div className="flex justify-center gap-3">
                                     <button className={styles.hpButton} onClick={start}>
                                         Play again
