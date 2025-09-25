@@ -55,8 +55,7 @@ export default function AuthPage() {
                 // update profile username; handle uniqueness
                 const { error: upErr } = await supabase
                     .from("profiles")
-                    .update({ username: wanted })
-                    .eq("id", uid);
+                    .upsert({ id: uid, username: wanted }, { onConflict: "id" });
 
                 if (upErr?.code === "23505") {
                     setErr("Username is taken. Try another.");
@@ -66,7 +65,7 @@ export default function AuthPage() {
                 if (upErr) throw upErr;
             }
 
-            router.replace("/");
+            router.replace("/profile");
         } catch (e: unknown) {
             setErr(e instanceof Error ? e.message : "Auth failed");
         } finally {

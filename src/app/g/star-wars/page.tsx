@@ -8,13 +8,13 @@ import Countdown from "@/game/components/Countdown";
 import { reducer, pickRandom } from "@/game/engine/session";
 import type { SessionState } from "@/game/engine/session";
 import { fetchSW } from "@/game/themes/star-wars/adapter";
+import type { SWFields } from "@/game/types";
 import GuessLogSW from "@/game/components/GuessLogSW";
 import styles from "./sw-theme.module.css";
 
 import { sb } from "@/lib/supabase";
 import { getGameId, getPersonalBest } from "@/lib/scores";
 import { upsertHighScore } from "@/game/data/highscore";
-import type { SWFields } from "@/game/types";
 
 type EndReason = "timeout" | "lost" | null;
 
