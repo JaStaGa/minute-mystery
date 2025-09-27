@@ -1,90 +1,57 @@
+// src/app/page.tsx
 "use client";
-
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { sb } from "@/lib/supabase";
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { getGameId, getPersonalBest } from "@/lib/scores";
 
-type Game = { id: string; slug: string; name: string };
-type BestMap = Record<string, number>;
+type CardProps = { name: string; slug: string };
 
-export default function Home() {
+function ThemeCard({ name, slug }: CardProps) {
   const supabase = sb();
-  const [games, setGames] = useState<Game[]>([]);
-  const [bests, setBests] = useState<BestMap>({});
-  const [loading, setLoading] = useState(true);
+  const [best, setBest] = useState<number | null>(null);
 
   useEffect(() => {
+    let alive = true;
     (async () => {
-      // 1) list games
-      const { data: gameRows } = await supabase
-        .from("games")
-        .select("id,slug,name")
-        .order("name");
-      setGames(gameRows ?? []);
-
-      // 2) user’s personal bests (by game)
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (user) {
-        const { data: hs } = await supabase
-          .from("high_scores")
-          .select("game_id,score")
-          .eq("user_id", user.id);
-
-        const map: BestMap = {};
-        (hs ?? []).forEach((r: { game_id: string; score: number }) => {
-          map[r.game_id] = Math.max(map[r.game_id] ?? 0, r.score);
-        });
-        setBests(map);
-      }
-
-      setLoading(false);
+      const id = await getGameId(supabase, slug);
+      if (!alive || !id) return;
+      const pb = await getPersonalBest(supabase, id);
+      if (alive) setBest(pb);
     })();
-  }, [supabase]);
+    return () => { alive = false; };
+  }, [slug, supabase]);
 
   return (
+    <div className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-5 shadow-sm">
+      <h2 className="text-xl font-semibold text-white">{name}</h2>
+      <p className="mt-3 text-sm text-zinc-400">Personal best: {best ?? "—"}</p>
+      <div className="mt-4">
+        <Link
+          href={`/g/${slug}`}
+          className="inline-flex items-center rounded-lg bg-white px-3 py-2 text-black"
+        >
+          Play
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+export default function Home() {
+  return (
     <main className="min-h-dvh p-6 text-zinc-100">
-      <div className="max-w-5xl mx-auto space-y-6">
-        <header className="text-center space-y-1">
-          <h1 className="text-3xl font-bold">Minute Mystery</h1>
-          <p className="text-zinc-400">Pick a theme and set a new personal best.</p>
+      <div className="mx-auto max-w-5xl">
+        <header className="mb-8 text-center">
+          <h1 className="text-4xl font-extrabold">Minute Mystery</h1>
+          <p className="mt-2 text-zinc-400">Pick a theme and set a new personal best.</p>
         </header>
 
-        {loading ? (
-          <p className="text-zinc-400">Loading games…</p>
-        ) : games.length === 0 ? (
-          <p className="text-zinc-400">No games yet.</p>
-        ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {games.map((g) => (
-              <Card
-                key={g.id}
-                className="bg-zinc-900/40 border-zinc-800 hover:bg-zinc-900 transition"
-              >
-                <CardHeader>
-                  <CardTitle className="text-xl">{g.name}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-sm text-zinc-400">
-                    Personal best:{" "}
-                    <span className="font-medium text-zinc-100">
-                      {bests[g.id] ?? "—"}
-                    </span>
-                  </div>
-                </CardContent>
-                <CardFooter>
-                  <Button asChild>
-                    <Link href={`/g/${g.slug}`}>Play</Link>
-                  </Button>
-                </CardFooter>
-              </Card>
-            ))}
-          </div>
-        )}
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <ThemeCard name="Harry Potter" slug="harry-potter" />
+          <ThemeCard name="Star Wars" slug="star-wars" />
+          <ThemeCard name="Naruto" slug="naruto" />
+        </div>
       </div>
     </main>
   );

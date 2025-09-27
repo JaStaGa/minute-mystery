@@ -1,0 +1,161 @@
+.nrtRoot {
+    --nrt-ink: #e4f1e6;
+    --nrt-bg: #0b1410;
+    --nrt-accent: #62c370;
+}
+
+.nrtTitle {
+    text-align: center;
+    color: var(--nrt-ink);
+    letter-spacing: .04em;
+    font-weight: 900;
+    font-size: clamp(1.6rem, 5vw, 2.4rem);
+}
+
+.panel {
+    background: rgba(12, 22, 17, 0.75);
+    border: 1px solid #233127;
+    border-radius: 14px;
+    padding: 16px;
+    box-shadow: 0 2px 0 #223125;
+}
+
+.nrtButton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid #2a362e;
+    background: #15211a;
+    color: var(--nrt-ink);
+    font-weight: 800;
+}
+
+.nrtButton:hover {
+    background: #183a27;
+}
+
+.statsRow {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.stat {
+    background: #0f1a14;
+    border: 1px solid #233127;
+    border-radius: 10px;
+    padding: 8px 12px;
+    color: var(--nrt-ink);
+}
+
+.statLabel {
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    opacity: .8;
+    font-size: .75rem;
+    margin-right: 6px;
+}
+
+.nrtInput {
+    width: 100%;
+    border-radius: 10px;
+    border: 1px solid #233127;
+    background: #0e1914;
+    color: var(--nrt-ink);
+    padding: 10px 12px;
+    outline: none;
+}
+
+.nrtInputWide {
+    width: 100%;
+}
+
+.clearBtn {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+    padding: 4px;
+    opacity: 1;
+    z-index: 20;
+    color: var(--nrt-accent);
+    font-weight: 800;
+    text-shadow: 0 0 6px rgba(98, 195, 112, .6);
+}
+
+.formColumn {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 8px;
+}
+
+.timeTrack {
+    width: 100%;
+    height: 8px;
+    background: #0e1914;
+    border: 1px solid #233127;
+    border-radius: 9999px;
+    overflow: hidden;
+}
+
+.timeFill {
+    height: 100%;
+    background: var(--nrt-accent);
+    transition: width .2s linear;
+}
+
+.tableWrap {
+    margin-top: 8px;
+}
+
+.guessCard {
+    border: 1px solid #233127;
+    background: #0f1914;
+}
+
+.endBlock {
+    margin-top: 12px;
+}
+
+.missedHdr {
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    font-weight: 700;
+    text-align: center;
+    color: var(--nrt-accent);
+}
+
+/* Pills shared with GuessLogNaruto */
+.pill {
+    display: inline-block;
+    padding: 6px 10px;
+    border-radius: 9999px;
+    border: 1px solid #233127;
+    background: #0f1914;
+    color: var(--nrt-ink);
+    font-weight: 700;
+    font-size: .85rem;
+}
+
+.pillSuccess {
+    composes: pill;
+    border-color: #2f6c42;
+    background: #15341f;
+    box-shadow: 0 0 0 1px rgba(98, 195, 112, .25) inset;
+}
+
+.pillMuted {
+    display: inline-block;
+    padding: 6px 10px;
+    border-radius: 9999px;
+    border: 1px dashed #2a362e;
+    color: #a8b3ac;
+    font-size: .85rem;
+}

@@ -60,3 +60,19 @@ export type SWTraitKey = 'role' | 'affiliation' | 'type' | 'forceSensitive' | 'w
 export const SW_TRAIT_KEYS: readonly SWTraitKey[] =
     ['role', 'affiliation', 'type', 'forceSensitive', 'weapon', 'era'] as const
 export const SW_MULTI_KEYS = new Set<SWTraitKey>(['affiliation', 'era', 'weapon'])
+
+export type NarutoFields = {
+    name: string
+    hair: string
+    debut: string
+    gender: string
+    village: string
+    role: string
+    image?: string
+    abilities: string
+}
+
+export type NarutoTraitKey = 'hair' | 'debut' | 'gender' | 'village' | 'role' | 'abilities'
+export const NARUTO_TRAIT_KEYS: readonly NarutoTraitKey[] =
+    ['hair', 'debut', 'gender', 'village', 'role', 'abilities'] as const
+export const NARUTO_MULTI_KEYS = new Set<NarutoTraitKey>(['village', 'role', 'abilities'])
