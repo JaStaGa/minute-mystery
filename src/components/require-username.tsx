@@ -1,4 +1,3 @@
-// src/components/require-username.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -30,11 +29,7 @@ export default function RequireUsername({ children }: { children: React.ReactNod
             .eq("id", user.id)
             .maybeSingle();
 
-        if (error) {
-            // fall back to sign-in screen if table is unreachable
-            setState({ kind: "need-sign-in" });
-            return;
-        }
+        if (error) return setState({ kind: "need-sign-in" });
         if (!prof?.username) setState({ kind: "need-username" });
         else setState({ kind: "ok" });
     }
@@ -42,11 +37,9 @@ export default function RequireUsername({ children }: { children: React.ReactNod
     useEffect(() => {
         check();
 
-        // refresh on profile save
         function onUpdated() { check(); }
         window.addEventListener("mm-profile-updated", onUpdated);
 
-        // refresh on auth state changes
         const { data: sub } = supabase.auth.onAuthStateChange(() => check());
 
         return () => {
@@ -56,11 +49,14 @@ export default function RequireUsername({ children }: { children: React.ReactNod
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // Let the profile page render even when username is missing.
     const onProfilePage = pathname === "/profile";
 
-    if (state.kind === "ok" || onProfilePage) return <>{children}</>;
+    // Allow profile page only for signed-in users missing a username.
+    if (state.kind === "ok" || (state.kind === "need-username" && onProfilePage)) {
+        return <>{children}</>;
+    }
 
+    // Otherwise show gate (loading or need-sign-in or need-username on non-profile pages)
     return (
         <main className="min-h-dvh flex items-center justify-center p-6">
             <Card className="w-full max-w-md border border-zinc-800 bg-zinc-900/80 shadow-lg text-white">
@@ -74,13 +70,11 @@ export default function RequireUsername({ children }: { children: React.ReactNod
                     {state.kind === "need-sign-in" && (
                         <>
                             <h2 className="text-lg font-semibold !text-white">Sign in to play</h2>
-                            <p className="text-sm !text-white">
-                                Track scores and appear on leaderboards once you’re signed in.
-                            </p>
+                            <p className="text-sm !text-white">Track scores and appear on leaderboards once you’re signed in.</p>
                         </>
                     )}
 
-                    {state.kind === "need-username" && (
+                    {state.kind === "need-username" && !onProfilePage && (
                         <>
                             <h2 className="text-lg font-semibold !text-white">Finish your profile</h2>
                             <p className="!text-white/80">Choose a username before jumping into the game.</p>
@@ -92,7 +86,7 @@ export default function RequireUsername({ children }: { children: React.ReactNod
                     {state.kind === "need-sign-in" && (
                         <Button asChild><Link href="/auth">Go to sign in</Link></Button>
                     )}
-                    {state.kind === "need-username" && (
+                    {state.kind === "need-username" && !onProfilePage && (
                         <Button asChild><Link href="/profile">Set username</Link></Button>
                     )}
                 </CardFooter>
