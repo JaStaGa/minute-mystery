@@ -684,3 +684,22 @@
     background: #a47148;
     transition: width 120ms linear;
 }
+
+.clearBtn {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+    padding: 4px;
+    z-index: 20;
+    color: #4b2e2e;
+    /* HP ink */
+    font-weight: 800;
+    text-shadow: 0 0 6px rgba(164, 113, 72, .3);
+    /* subtle house vibe */
+}

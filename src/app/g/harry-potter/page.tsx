@@ -146,6 +146,11 @@ export default function HPGame() {
             ? `Guess ${state.attempts.length} submitted.`
             : "";
 
+    function clearGuess() {
+        setTyped("");
+        if (inputRef.current) inputRef.current.focus();
+    }
+
     return (
         <RequireUsername>
             <div className={styles.hpRoot}>
@@ -201,21 +206,31 @@ export default function HPGame() {
 
                                 <form action={onGuess} className={styles.formColumn} autoComplete="off">
                                     <label htmlFor="guess" className="sr-only">Guess</label>
-                                    <input
-                                        id="guess"
-                                        name="guess"
-                                        list="hp-names"
-                                        autoComplete="off"
-                                        autoCorrect="off"
-                                        autoCapitalize="off"
-                                        spellCheck={false}
-                                        ref={inputRef}
-                                        value={typed}
-                                        onChange={(e) => setTyped(e.target.value)}
-                                        className={`${styles.hpInput} ${styles.hpInputWide} ${styles.hpInputFlex}`}
-                                        placeholder="Type a character name…"
-                                        aria-label="Guess input"
-                                    />
+
+                                    <div style={{ position: "relative", display: "flex", alignItems: "center", width: "100%" }}>
+                                        <input
+                                            id="guess"
+                                            name="guess"
+                                            list="hp-names"
+                                            autoComplete="off" autoCorrect="off" autoCapitalize="off" spellCheck={false}
+                                            ref={inputRef} value={typed} onChange={(e) => setTyped(e.target.value)}
+                                            className={`${styles.hpInput} ${styles.hpInputWide} ${styles.hpInputFlex}`}
+                                            placeholder="Type a character name…" aria-label="Guess input"
+                                            style={{ paddingRight: 48 }}
+                                        />
+                                        {typed && (
+                                            <button
+                                                type="button"
+                                                onClick={clearGuess}
+                                                aria-label="Clear input"
+                                                title="Clear"
+                                                className={styles.clearBtn}
+                                            >
+                                                ×
+                                            </button>
+                                        )}
+                                    </div>
+
                                     <button type="submit" className={styles.hpButtonSm}>Guess</button>
                                 </form>
 
