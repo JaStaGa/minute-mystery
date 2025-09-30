@@ -38,7 +38,7 @@ export default function NarutoGame() {
     } as SessionState);
 
     const supabase = sb();
-    const [gameId, setGameId] = useState<number  | null>(null);
+    const [gameId, setGameId] = useState<number | null>(null);
     const [best, setBest] = useState<number | null>(null);
     const savedRef = useRef(false);
 
@@ -145,8 +145,7 @@ export default function NarutoGame() {
     }, []);
 
     const ended = state.status === "ended" || state.mistakes >= 5;
-    const liveMsg =
-        ended ? "Session ended." : state.attempts.length ? `Guess ${state.attempts.length} submitted.` : "";
+    const liveMsg = ended ? "Session ended." : state.attempts.length ? `Guess ${state.attempts.length} submitted.` : "";
 
     return (
         <RequireUsername>
@@ -158,8 +157,12 @@ export default function NarutoGame() {
                                 <div className={styles.panel}>
                                     <h1 className={styles.nrtTitle}>NARUTO GUESSING GAME</h1>
                                     <div className="mt-3 flex flex-col items-center gap-3">
-                                        <button className={styles.nrtButton} onClick={start}>Start</button>
-                                        <Link href="/g/naruto/leaderboard" className={styles.nrtButton}>Leaderboard</Link>
+                                        <button className={styles.nrtButton} onClick={start}>
+                                            Start
+                                        </button>
+                                        <Link href="/g/naruto/leaderboard" className={styles.nrtButton}>
+                                            Leaderboard
+                                        </Link>
                                     </div>
                                 </div>
                             </div>
@@ -170,11 +173,19 @@ export default function NarutoGame() {
                                 <h1 className={styles.nrtTitle}>NARUTO GUESSING GAME</h1>
 
                                 <div className={styles.statsRow}>
-                                    <div className={styles.stat}><span className={styles.statLabel}>Score</span> {state.score}</div>
-                                    <div className={styles.stat}><span className={styles.statLabel}>Round</span> {state.round}</div>
-                                    <div className={styles.stat}><span className={styles.statLabel}>Mistakes</span> {state.mistakes}/5</div>
-                                    {state.status !== "playing" && best !== null && (
-                                        <div className={styles.stat}><span className={styles.statLabel}>Personal Best</span> {best}</div>
+                                    <div className={styles.stat}>
+                                        <span className={styles.statLabel}>Score</span> {state.score}
+                                    </div>
+                                    <div className={styles.stat}>
+                                        <span className={styles.statLabel}>Round</span> {state.round}
+                                    </div>
+                                    <div className={styles.stat}>
+                                        <span className={styles.statLabel}>Mistakes</span> {state.mistakes}/5
+                                    </div>
+                                    {best !== null && (
+                                        <div className={styles.stat}>
+                                            <span className={styles.statLabel}>Personal Best</span> {best}
+                                        </div>
                                     )}
                                     <div className={styles.stat}>
                                         <span className={styles.statLabel}>Time</span>
@@ -192,17 +203,21 @@ export default function NarutoGame() {
                                     </div>
                                 </div>
 
-                                <div className={styles.timeTrack}>
+                                <div className={styles.timeTrack} aria-hidden>
                                     <div
                                         className={styles.timeFill}
                                         style={{ width: `${Math.max(0, Math.min(100, (1 - msLeft / 60000) * 100))}%` }}
                                     />
                                 </div>
 
-                                <div aria-live="polite" className="sr-only">{liveMsg}</div>
+                                <div aria-live="polite" className="sr-only">
+                                    {liveMsg}
+                                </div>
 
                                 <form action={onGuess} className={styles.formColumn} autoComplete="off">
-                                    <label htmlFor="guess" className="sr-only">Guess</label>
+                                    <label htmlFor="guess" className="sr-only">
+                                        Guess
+                                    </label>
 
                                     <div style={{ position: "relative", display: "flex", alignItems: "center", width: "100%" }}>
                                         <input
@@ -235,10 +250,14 @@ export default function NarutoGame() {
                                     </div>
 
                                     <datalist id="nrt-names">
-                                        {all.map((c) => (<option key={c.name} value={c.name} />))}
+                                        {all.map((c) => (
+                                            <option key={c.name} value={c.name} />
+                                        ))}
                                     </datalist>
 
-                                    <button type="submit" className={styles.nrtButton}>Guess</button>
+                                    <button type="submit" className={styles.nrtButton}>
+                                        Guess
+                                    </button>
                                 </form>
 
                                 <div className={styles.tableWrap}>
@@ -254,7 +273,10 @@ export default function NarutoGame() {
                                         <h2 className="text-lg font-semibold">Correct this session</h2>
                                         <ul className="space-y-2 max-w-2xl mx-auto">
                                             {solved.map((c, i) => (
-                                                <li key={`${c.name}-${i}`} className={`flex items-center gap-3 ${styles.guessCard} rounded p-2`}>
+                                                <li
+                                                    key={`${c.name}-${i}`}
+                                                    className={`flex items-center gap-3 ${styles.guessCard} rounded p-2`}
+                                                >
                                                     <Image
                                                         src={c.image || "https://via.placeholder.com/60x80"}
                                                         alt={c.name}
@@ -276,15 +298,29 @@ export default function NarutoGame() {
                         )}
 
                         {ended && (
-                            <div role="dialog" aria-labelledby="gameOverTitle" className={`space-y-4 text-center ${styles.endBlock}`}>
+                            <div
+                                role="dialog"
+                                aria-labelledby="gameOverTitle"
+                                className={`space-y-4 text-center ${styles.endBlock}`}
+                            >
                                 <div className={styles.panel}>
-                                    <h2 id="gameOverTitle" className={styles.nrtTitle} style={{ margin: 0, fontSize: "clamp(1.6rem, 5.5vw, 2.4rem)" }}>
+                                    <h2
+                                        id="gameOverTitle"
+                                        className={styles.nrtTitle}
+                                        style={{ margin: 0, fontSize: "clamp(1.6rem, 5.5vw, 2.4rem)" }}
+                                    >
                                         {endReason === "timeout" ? "Time’s up" : "Game over"}
                                     </h2>
 
                                     <div className={styles.statsRow} style={{ justifyContent: "center", marginTop: 8 }}>
-                                        <div className={styles.stat}><span className={styles.statLabel}>Final Score</span> {state.score}</div>
-                                        {best !== null && (<div className={styles.stat}><span className={styles.statLabel}>Personal Best</span> {best}</div>)}
+                                        <div className={styles.stat}>
+                                            <span className={styles.statLabel}>Final Score</span> {state.score}
+                                        </div>
+                                        {best !== null && (
+                                            <div className={styles.stat}>
+                                                <span className={styles.statLabel}>Personal Best</span> {best}
+                                            </div>
+                                        )}
                                     </div>
 
                                     {lastMissed && (
@@ -295,7 +331,14 @@ export default function NarutoGame() {
                                                 const img = missed?.image || "";
                                                 return img ? (
                                                     <div style={{ marginTop: 8, display: "grid", placeItems: "center" }}>
-                                                        <Image src={img} alt={lastMissed} width={96} height={128} className="rounded object-cover" unoptimized />
+                                                        <Image
+                                                            src={img}
+                                                            alt={lastMissed}
+                                                            width={96}
+                                                            height={128}
+                                                            className="rounded object-cover"
+                                                            unoptimized
+                                                        />
                                                     </div>
                                                 ) : null;
                                             })()}
@@ -303,8 +346,12 @@ export default function NarutoGame() {
                                     )}
 
                                     <div className="mt-3 flex justify-center gap-3">
-                                        <button className={styles.nrtButton} onClick={start}>Play again</button>
-                                        <Link href="/g/naruto/leaderboard" className={styles.nrtButton}>View leaderboard</Link>
+                                        <button className={styles.nrtButton} onClick={start}>
+                                            Play again
+                                        </button>
+                                        <Link href="/g/naruto/leaderboard" className={styles.nrtButton}>
+                                            View leaderboard
+                                        </Link>
                                     </div>
                                 </div>
                             </div>

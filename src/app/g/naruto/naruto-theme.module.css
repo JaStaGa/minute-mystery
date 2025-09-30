@@ -30,16 +30,28 @@
     background: #15211a;
     color: var(--nrt-ink);
     font-weight: 800;
+    transition: transform .06s ease, background .12s ease, box-shadow .12s ease;
+    text-decoration: none;
 }
 
 .nrtButton:hover {
     background: #183a27;
 }
 
+.nrtButton:active {
+    transform: translateY(1px);
+}
+
+.nrtButton:focus-visible {
+    outline: 2px solid var(--nrt-accent);
+    outline-offset: 2px;
+}
+
 .statsRow {
     display: flex;
     gap: 10px;
     flex-wrap: wrap;
+    align-items: center;
 }
 
 .stat {
@@ -48,6 +60,7 @@
     border-radius: 10px;
     padding: 8px 12px;
     color: var(--nrt-ink);
+    line-height: 1.2;
 }
 
 .statLabel {
@@ -66,6 +79,11 @@
     color: var(--nrt-ink);
     padding: 10px 12px;
     outline: none;
+}
+
+.nrtInput:focus-visible {
+    box-shadow: 0 0 0 2px rgba(98, 195, 112, .35);
+    border-color: #2f6c42;
 }
 
 .nrtInputWide {
@@ -90,10 +108,22 @@
     text-shadow: 0 0 6px rgba(98, 195, 112, .6);
 }
 
+.clearBtn:focus-visible {
+    outline: 2px solid var(--nrt-accent);
+    outline-offset: 2px;
+    border-radius: 6px;
+}
+
 .formColumn {
     display: grid;
     grid-template-columns: 1fr auto;
     gap: 8px;
+}
+
+@media (max-width: 520px) {
+    .formColumn {
+        grid-template-columns: 1fr;
+    }
 }
 
 .timeTrack {
@@ -132,8 +162,11 @@
     color: var(--nrt-accent);
 }
 
-/* Pills shared with GuessLogNaruto */
-.pill {
+/* Base pill styles for all variants (CSS Modules doesn’t support `composes` here) */
+.pill,
+.pillSuccess,
+.pillGreen,
+.pillYellow {
     display: inline-block;
     padding: 6px 10px;
     border-radius: 9999px;
@@ -142,15 +175,17 @@
     color: var(--nrt-ink);
     font-weight: 700;
     font-size: .85rem;
+    white-space: nowrap;
 }
 
+/* Correct-guess pill */
 .pillSuccess {
-    composes: pill;
     border-color: #2f6c42;
     background: #15341f;
     box-shadow: 0 0 0 1px rgba(98, 195, 112, .25) inset;
 }
 
+/* Muted summary */
 .pillMuted {
     display: inline-block;
     padding: 6px 10px;
@@ -158,4 +193,15 @@
     border: 1px dashed #2a362e;
     color: #a8b3ac;
     font-size: .85rem;
+}
+
+/* Optional colored variants if you choose to use classes instead of inline styles */
+.pillGreen {
+    background: rgba(46, 204, 113, 0.18);
+    border-color: rgba(46, 204, 113, 0.45);
+}
+
+.pillYellow {
+    background: rgba(241, 196, 15, 0.18);
+    border-color: rgba(241, 196, 15, 0.45);
 }
