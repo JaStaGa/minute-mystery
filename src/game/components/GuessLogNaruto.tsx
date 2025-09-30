@@ -15,7 +15,7 @@ function splitMulti(s: string) {
         .filter(Boolean);
 }
 
-type Hint = { key: keyof NarutoFields; value: string; tone: "green" | "yellow" };
+type Hint = { key: keyof NarutoFields; value: string; tone: "exact" | "overlap" };
 
 function compareTraits(target: NarutoFields, guess: NarutoFields): Hint[] {
     const out: Hint[] = [];
@@ -23,18 +23,16 @@ function compareTraits(target: NarutoFields, guess: NarutoFields): Hint[] {
         const tVals = MULTI.has(k) ? splitMulti(String(target[k] ?? "")) : [String(target[k] ?? "")];
         const gVals = MULTI.has(k) ? splitMulti(String(guess[k] ?? "")) : [String(guess[k] ?? "")];
 
-        // exact match for single-value fields
         if (!MULTI.has(k)) {
             if (tVals[0] && gVals[0] && tVals[0].toLowerCase() === gVals[0].toLowerCase()) {
-                out.push({ key: k, value: tVals[0], tone: "green" });
+                out.push({ key: k, value: tVals[0], tone: "exact" });
             }
             continue;
         }
 
-        // partial overlap for multi-value fields
         const tSet = new Set(tVals.map((v) => v.toLowerCase()));
         const overlaps = gVals.filter((v) => tSet.has(v.toLowerCase()));
-        for (const v of overlaps) out.push({ key: k, value: v, tone: "yellow" });
+        for (const v of overlaps) out.push({ key: k, value: v, tone: "overlap" });
     }
     return out;
 }
@@ -57,54 +55,26 @@ export default function GuessLogNaruto({ target, characters, attempts }: Props) 
         .map((name) => characters.find((c) => c.name.toLowerCase() === name.toLowerCase()))
         .filter(Boolean) as NarutoFields[];
 
-    // newest on top for display
     const rows = resolved.map((g, i) => {
         const isCorrect = g.name === target.name;
         const hints = compareTraits(target, g);
         return { guess: g, index: i + 1, isCorrect, hints };
     });
-    const display = rows.slice().reverse(); // newest first
-
-    // persistent “hints so far” = union over all attempts
+    const display = rows.slice().reverse();
     const hintsSoFar = uniqueHints(rows.flatMap((r) => r.hints));
-
-    const pillStyle = {
-        base: {
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 6,
-            marginRight: 6,
-            marginBottom: 4,
-        } as React.CSSProperties,
-        green: {
-            backgroundColor: "rgba(46, 204, 113, 0.18)",
-            border: "1px solid rgba(46, 204, 113, 0.45)",
-        } as React.CSSProperties,
-        yellow: {
-            backgroundColor: "rgba(241, 196, 15, 0.18)",
-            border: "1px solid rgba(241, 196, 15, 0.45)",
-        } as React.CSSProperties,
-    };
 
     return (
         <div style={{ marginTop: 8 }}>
             {/* Hints so far */}
-            <div
-                style={{
-                    border: "1px solid rgba(255,255,255,.12)",
-                    borderRadius: 10,
-                    padding: 10,
-                    marginBottom: 10,
-                    background: "rgba(255,255,255,.03)",
-                }}
-            >
+            <div className={styles.glassBox}>
                 <div
                     style={{
-                        fontWeight: 800,
+                        fontWeight: 900,
                         color: "var(--nrt-accent)",
                         fontSize: "clamp(0.9rem, 2.4vw, 1.05rem)",
                         marginBottom: 6,
                         textAlign: "center",
+                        letterSpacing: ".04em",
                     }}
                 >
                     Hints so far
@@ -114,11 +84,11 @@ export default function GuessLogNaruto({ target, characters, attempts }: Props) 
                         hintsSoFar.map((h, i) => (
                             <span
                                 key={`sofar-${i}`}
-                                className={styles.pill}
-                                style={{
-                                    ...pillStyle.base,
-                                    ...(h.tone === "green" ? pillStyle.green : pillStyle.yellow),
-                                }}
+                                className={
+                                    h.tone === "exact"
+                                        ? `${styles.pill} ${styles.pillGold}`
+                                        : `${styles.pill} ${styles.pillAmber}`
+                                }
                             >
                                 {String(h.key)}: {h.value}
                             </span>
@@ -129,17 +99,10 @@ export default function GuessLogNaruto({ target, characters, attempts }: Props) 
                 </div>
             </div>
 
-            {/* Grid header */}
+            {/* Header */}
             <div
-                style={{
-                    display: "grid",
-                    gridTemplateColumns: "1fr 1fr",
-                    textAlign: "center",
-                    fontWeight: 800,
-                    color: "var(--nrt-accent)",
-                    fontSize: "clamp(0.95rem, 2.8vw, 1.25rem)",
-                    marginBottom: 6,
-                }}
+                className={styles.glassRowHeader}
+                style={{ gridTemplateColumns: "1fr 1fr" }}
             >
                 <div>Guesses</div>
                 <div>Similarities</div>
@@ -152,22 +115,15 @@ export default function GuessLogNaruto({ target, characters, attempts }: Props) 
                 const summaryCount = r.hints.length;
 
                 return (
-                    <div
-                        key={r.guess.name + i}
-                        style={{
-                            display: "grid",
-                            gridTemplateColumns: "1fr 1fr",
-                            gap: 8,
-                            alignItems: "center",
-                            padding: "6px 0",
-                            borderTop: i === 0 ? "1px solid rgba(255,255,255,.08)" : undefined,
-                            borderBottom: "1px solid rgba(255,255,255,.08)",
-                        }}
-                    >
+                    <div key={r.guess.name + i} className={styles.glassRow}>
                         {/* Guess pill */}
                         <div style={{ textAlign: "center" }}>
                             <span
-                                className={r.isCorrect ? styles.pillSuccess : styles.pill}
+                                className={
+                                    r.isCorrect
+                                        ? `${styles.pill} ${styles.pillGold}`
+                                        : styles.pill
+                                }
                                 style={{ display: "inline-flex", alignItems: "center", gap: 8 }}
                             >
                                 <strong style={{ opacity: 0.9 }}>{attempts.length - i}:</strong>
@@ -175,18 +131,18 @@ export default function GuessLogNaruto({ target, characters, attempts }: Props) 
                             </span>
                         </div>
 
-                        {/* Similarities column */}
+                        {/* Similarities */}
                         <div style={{ textAlign: "center" }}>
                             {isNewest ? (
                                 visibleHints.length ? (
                                     visibleHints.map((h, j) => (
                                         <span
                                             key={j}
-                                            className={styles.pill}
-                                            style={{
-                                                ...pillStyle.base,
-                                                ...(h.tone === "green" ? pillStyle.green : pillStyle.yellow),
-                                            }}
+                                            className={
+                                                h.tone === "exact"
+                                                    ? `${styles.pill} ${styles.pillGold}`
+                                                    : `${styles.pill} ${styles.pillAmber}`
+                                            }
                                         >
                                             {String(h.key)}: {h.value}
                                         </span>

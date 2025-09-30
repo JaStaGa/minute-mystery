@@ -34,7 +34,7 @@ export default function UserMenu() {
             if (!active) return;
             setUid(id);
             if (id) fetchProfile(id);
-            else setProfile(null); // show placeholder
+            else setProfile(null);
         })();
         return () => {
             active = false;
@@ -46,15 +46,13 @@ export default function UserMenu() {
         const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
             const id = session?.user?.id ?? null;
             if (!id) {
-                // signed out
                 setUid(null);
-                setProfile(null); // clears name + pfp
+                setProfile(null);
                 setVersion((v) => v + 1);
                 return;
             }
-            // signed in or token/user updated
             setUid(id);
-            fetchProfile(id); // refresh header name + pfp
+            fetchProfile(id);
         });
         return () => {
             sub.subscription.unsubscribe();
@@ -70,22 +68,23 @@ export default function UserMenu() {
         return () => window.removeEventListener("mm-profile-updated", onProfileUpdated);
     }, [uid, fetchProfile]);
 
-    const initial = (profile?.username || "").trim().slice(0, 1).toUpperCase() || "?";
+    const isAuthed = !!uid;
+    const initial =
+        (profile?.username || "").trim().slice(0, 1).toUpperCase() || "?" as const;
 
     const onSignOut = async () => {
         try {
             await supabase.auth.signOut();
         } finally {
-            // hard redirect so middleware + client state stay in sync
             window.location.href = "/";
         }
     };
 
     return (
         <div className="flex items-center gap-3">
-            <Link href="/profile" aria-label="Open profile" className="inline-block">
+            <Link href={isAuthed ? "/profile" : "/profile"} aria-label={isAuthed ? "Open profile" : "Log in"} className="inline-block">
                 <div className="w-9 h-9 rounded-full overflow-hidden bg-zinc-800 border border-zinc-600 grid place-items-center">
-                    {profile?.icon_url ? (
+                    {isAuthed && profile?.icon_url ? (
                         <Image
                             src={`${profile.icon_url}?v=${version}`}
                             alt="avatar"
@@ -99,13 +98,16 @@ export default function UserMenu() {
                     )}
                 </div>
             </Link>
-            {profile?.username && (
+
+            {isAuthed && profile?.username && (
                 <span className="text-sm text-zinc-200 truncate max-w-[10ch]">{profile.username}</span>
             )}
 
-            <button onClick={onSignOut} className="text-sm opacity-80 hover:opacity-100">
-                Sign out
-            </button>
+            {isAuthed ? (
+                <button onClick={onSignOut} className="text-sm opacity-80 hover:opacity-100">Sign out</button>
+            ) : (
+                <Link href="/profile" className="text-sm opacity-80 hover:opacity-100">Log in</Link>
+            )}
         </div>
     );
 }

@@ -1,23 +1,103 @@
-.nrtRoot {
-    --nrt-ink: #e4f1e6;
-    --nrt-bg: #0b1410;
-    --nrt-accent: #62c370;
+@font-face {
+    font-family: "Naruto Font";
+    src: url("/fonts/naruto/njnaruto.ttf") format("truetype");
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
 }
 
+/* -----------------------------------------------------------
+   TOKENS
+----------------------------------------------------------- */
+.nrtRoot {
+    --nrt-ink: #e9efe9;
+    --nrt-bg: #0b0b0b;
+    --nrt-accent: #ffb02e;
+    /* orange for UI */
+    --nrt-hint: #62c370;
+    /* green reserved for hints */
+    position: relative;
+    min-height: 100svh;
+    background: var(--nrt-bg);
+    overflow-x: clip;
+    /* avoid sub-pixel sideways scroll */
+}
+
+/* Fixed, GPU-friendly background (no 'background-attachment: fixed') */
+.nrtRoot::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    background:
+        radial-gradient(1200px 600px at 50% -10%, rgba(255, 210, 74, .12), rgba(0, 0, 0, 0)),
+        url("/images/naruto/naruto-seal-9x16.png") center/cover no-repeat;
+}
+
+@media (min-aspect-ratio: 1/1) {
+    .nrtRoot::before {
+        background:
+            radial-gradient(1400px 700px at 50% -10%, rgba(255, 210, 74, .12), rgba(0, 0, 0, 0)),
+            url("/images/naruto/naruto-seal-16x9.png") center/cover no-repeat;
+    }
+}
+
+/* Single top fade (no clip-path = no band after scroll) */
+.nrtRoot::after {
+    content: "";
+    position: fixed;
+    inset: 0 0 auto 0;
+    height: 180px;
+    background: linear-gradient(to bottom, rgba(0, 0, 0, .65), rgba(0, 0, 0, 0));
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* Keep header/user-menu always crisp above scrims */
+:global(header),
+:global(nav),
+:global([data-mm-topbar]) {
+    position: relative;
+    z-index: 20;
+}
+
+/* Ensure the game screen sits above background/scrim */
+:global(.game-screen) {
+    position: relative;
+    z-index: 10;
+}
+
+/* -----------------------------------------------------------
+   HERO (idle screen) – prevents scrolling on the start view
+----------------------------------------------------------- */
+.hero {
+    min-height: calc(100svh - 64px);
+    /* adjust if your top bar height differs */
+    display: grid;
+    place-content: center;
+    padding: 16px 12px;
+}
+
+/* -----------------------------------------------------------
+   TYPE & UI
+----------------------------------------------------------- */
 .nrtTitle {
     text-align: center;
     color: var(--nrt-ink);
-    letter-spacing: .04em;
+    letter-spacing: .06em;
+    /* a touch more spacing so letters don’t crowd */
     font-weight: 900;
     font-size: clamp(1.6rem, 5vw, 2.4rem);
+    font-family: "Naruto Font", system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+    text-shadow: 0 2px 0 rgba(0, 0, 0, .35), 0 0 20px rgba(255, 210, 74, .15);
 }
 
 .panel {
-    background: rgba(12, 22, 17, 0.75);
-    border: 1px solid #233127;
+    background: rgba(9, 14, 12, .78);
+    border: 1px solid rgba(255, 255, 255, .08);
     border-radius: 14px;
     padding: 16px;
-    box-shadow: 0 2px 0 #223125;
+    box-shadow: 0 1px 0 rgba(0, 0, 0, .35);
 }
 
 .nrtButton {
@@ -26,16 +106,18 @@
     justify-content: center;
     padding: 10px 14px;
     border-radius: 10px;
-    border: 1px solid #2a362e;
-    background: #15211a;
+    border: 1px solid rgba(255, 255, 255, .10);
+    background: #1a1f1c;
+    /* no green base */
     color: var(--nrt-ink);
     font-weight: 800;
-    transition: transform .06s ease, background .12s ease, box-shadow .12s ease;
     text-decoration: none;
+    transition: transform .06s ease, background .12s ease, box-shadow .12s ease;
+    box-shadow: 0 1px 0 rgba(0, 0, 0, .35), 0 0 0 1px rgba(255, 176, 46, .15) inset;
 }
 
 .nrtButton:hover {
-    background: #183a27;
+    background: #222824;
 }
 
 .nrtButton:active {
@@ -55,8 +137,8 @@
 }
 
 .stat {
-    background: #0f1a14;
-    border: 1px solid #233127;
+    background: rgba(12, 16, 14, .8);
+    border: 1px solid rgba(255, 255, 255, .10);
     border-radius: 10px;
     padding: 8px 12px;
     color: var(--nrt-ink);
@@ -66,7 +148,7 @@
 .statLabel {
     text-transform: uppercase;
     letter-spacing: .06em;
-    opacity: .8;
+    opacity: .85;
     font-size: .75rem;
     margin-right: 6px;
 }
@@ -74,17 +156,20 @@
 .nrtInput {
     width: 100%;
     border-radius: 10px;
-    border: 1px solid #233127;
-    background: #0e1914;
+    border: 1px solid rgba(255, 255, 255, .10);
+    background: #0e1412;
     color: var(--nrt-ink);
     padding: 10px 12px;
     outline: none;
+    box-shadow: 0 1px 0 rgba(0, 0, 0, .35);
 }
 
 .nrtInput:focus-visible {
     box-shadow: 0 0 0 2px rgba(98, 195, 112, .35);
     border-color: #2f6c42;
 }
+
+/* green only for focus */
 
 .nrtInputWide {
     width: 100%;
@@ -101,11 +186,10 @@
     font-size: 18px;
     line-height: 1;
     padding: 4px;
-    opacity: 1;
     z-index: 20;
     color: var(--nrt-accent);
     font-weight: 800;
-    text-shadow: 0 0 6px rgba(98, 195, 112, .6);
+    text-shadow: 0 0 6px rgba(255, 176, 46, .6);
 }
 
 .clearBtn:focus-visible {
@@ -120,7 +204,7 @@
     gap: 8px;
 }
 
-@media (max-width: 520px) {
+@media (max-width:520px) {
     .formColumn {
         grid-template-columns: 1fr;
     }
@@ -129,8 +213,8 @@
 .timeTrack {
     width: 100%;
     height: 8px;
-    background: #0e1914;
-    border: 1px solid #233127;
+    background: #0e1412;
+    border: 1px solid rgba(255, 255, 255, .10);
     border-radius: 9999px;
     overflow: hidden;
 }
@@ -146,8 +230,8 @@
 }
 
 .guessCard {
-    border: 1px solid #233127;
-    background: #0f1914;
+    border: 1px solid rgba(255, 255, 255, .10);
+    background: rgba(12, 16, 14, .72);
 }
 
 .endBlock {
@@ -162,46 +246,75 @@
     color: var(--nrt-accent);
 }
 
-/* Base pill styles for all variants (CSS Modules doesn’t support `composes` here) */
-.pill,
-.pillSuccess,
-.pillGreen,
-.pillYellow {
+/* Pills – no general green; keep green only for “success/hints” */
+.pill {
     display: inline-block;
     padding: 6px 10px;
     border-radius: 9999px;
-    border: 1px solid #233127;
-    background: #0f1914;
+    border: 1px solid rgba(255, 255, 255, .12);
+    background: #0e1412;
     color: var(--nrt-ink);
-    font-weight: 700;
-    font-size: .85rem;
+    font-weight: 800;
+    font-size: .9rem;
     white-space: nowrap;
+    box-shadow: 0 1px 0 rgba(0, 0, 0, .35), 0 0 0 1px rgba(255, 255, 255, .02) inset;
+    margin: 0 6px 6px 0;
 }
 
-/* Correct-guess pill */
-.pillSuccess {
-    border-color: #2f6c42;
-    background: #15341f;
-    box-shadow: 0 0 0 1px rgba(98, 195, 112, .25) inset;
+.pillGold {
+    background: var(--nrt-accent);
+    color: #111;
+    border-color: #ffd36a;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, .35);
 }
 
-/* Muted summary */
+.pillAmber {
+    background: rgba(255, 176, 46, .20);
+    border-color: rgba(255, 176, 46, .55);
+}
+
+/* muted summary */
 .pillMuted {
     display: inline-block;
     padding: 6px 10px;
     border-radius: 9999px;
-    border: 1px dashed #2a362e;
-    color: #a8b3ac;
+    border: 1px dashed rgba(255, 255, 255, .18);
+    color: #e8ede8;
     font-size: .85rem;
+    background: rgba(0, 0, 0, .45);
 }
 
-/* Optional colored variants if you choose to use classes instead of inline styles */
-.pillGreen {
-    background: rgba(46, 204, 113, 0.18);
-    border-color: rgba(46, 204, 113, 0.45);
+.glassBox {
+    border: 1px solid rgba(255, 255, 255, .14);
+    background: rgba(0, 0, 0, .52);
+    backdrop-filter: blur(6px) saturate(1.06);
+    -webkit-backdrop-filter: blur(6px) saturate(1.06);
+    border-radius: 12px;
+    padding: 10px;
 }
 
-.pillYellow {
-    background: rgba(241, 196, 15, 0.18);
-    border-color: rgba(241, 196, 15, 0.45);
+.glassRow {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, .08);
+    background: rgba(0, 0, 0, .38);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+
+.glassRow:first-of-type {
+    border-top: 1px solid rgba(255, 255, 255, .08);
+}
+
+.glassRowHeader {
+    display: grid;
+    text-align: center;
+    font-weight: 900;
+    color: var(--nrt-accent);
+    font-size: clamp(.95rem, 2.8vw, 1.25rem);
+    margin: 6px 0;
+    letter-spacing: .04em;
 }
