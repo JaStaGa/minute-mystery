@@ -517,6 +517,17 @@
     color: #e8faee;
 }
 
+/* optional: for partial matches elsewhere */
+.pillWarnSm {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 10px;
+    border: 1px solid #c7a500;
+    background: #ffe066;
+    color: #4b2e2e;
+    font-size: 0.85rem;
+}
+
 /* ----- Compact two-column Guess Log ----- */
 .logWrap {
     display: grid;

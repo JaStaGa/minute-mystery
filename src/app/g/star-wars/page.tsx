@@ -126,11 +126,19 @@ export default function SWGame() {
         const endedNow = state.status === "ended" || state.mistakes >= 5;
         if (!endedNow || savedRef.current) return;
         savedRef.current = true;
+
         (async () => {
-            await upsertHighScore(supabase, "star-wars", state.score);
-            if (gameId) {
-                const pb = await getPersonalBest(supabase, gameId);
-                if (pb !== null) setBest(pb);
+            try {
+                await upsertHighScore(supabase, "star-wars", state.score); // save
+                // optimistic PB so the dialog shows the new best immediately
+                setBest((prev) => Math.max(prev ?? 0, state.score));
+                // confirm from DB (in case fallback path or RPC updated)
+                if (gameId) {
+                    const pb = await getPersonalBest(supabase, gameId);
+                    if (pb !== null) setBest(pb);
+                }
+            } catch (e) {
+                console.error("save high score failed", e);
             }
         })();
     }, [state.status, state.mistakes, state.score, gameId, supabase]);
@@ -158,6 +166,9 @@ export default function SWGame() {
                     const c = ch.toLowerCase();
                     if (c === "i") return <span key={i} className={styles.fallbackI}>I</span>;
                     if (c === "u") return <span key={i} className={styles.fallbackU}>{ch}</span>;
+                    if (c === "o") return <span key={i} className={styles.fallbackO}>{ch}</span>;
+                    if (c === "v") return <span key={i} className={styles.fallbackV}>{ch}</span>;
+
                     return <span key={i}>{ch}</span>;
                 })}
             </>

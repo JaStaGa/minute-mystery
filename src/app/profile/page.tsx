@@ -104,8 +104,11 @@ export default function ProfilePage() {
     }
 
     async function signOut() {
-        await supabase.auth.signOut();
-        router.push("/auth");
+        try {
+            await supabase.auth.signOut();
+        } finally {
+            window.location.href = "/"; // don't use router.push here
+        }
     }
 
     return (

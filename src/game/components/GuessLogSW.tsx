@@ -1,36 +1,58 @@
 'use client'
 
-import type { SWFields } from '@/game/types'
+import type { SWFields, SWTraitKey } from '@/game/types'
+import { SW_TRAIT_KEYS, SW_MULTI_KEYS } from '@/game/types'
 import { getNewSharedTraitsSW } from '@/game/engine/traits'
 import styles from '@/app/g/star-wars/sw-theme.module.css'
 
 type Props = { target: SWFields; characters: SWFields[]; attempts: string[] }
 
+const canon = (s: string) => s.trim().toLowerCase()
+const tokens = (s: string) => s.split(',').map(t => canon(t)).filter(Boolean)
+
+function classifyMatch(k: SWTraitKey, guessV: string, targetV: string): 'exact' | 'partial' | 'none' {
+    if (!guessV || !targetV) return 'none'
+    if (!SW_MULTI_KEYS.has(k)) return canon(guessV) === canon(targetV) ? 'exact' : 'none'
+
+    const gT = tokens(guessV)
+    const tT = tokens(targetV)
+    const inter = gT.filter(t => tT.includes(t))
+    if (inter.length === 0) return 'none'
+    const exact = inter.length === gT.length && gT.length === tT.length
+    return exact ? 'exact' : 'partial'
+}
+
 export default function GuessLogSW({ target, characters, attempts }: Props) {
-    const rows = attempts.map((name, i) => {
-        const guess = characters.find(c => c.name.toLowerCase() === name.toLowerCase())
-        const isCorrect = !!guess && guess.name === target.name
-
-        const traits = guess
-            ? getNewSharedTraitsSW(
-                {
-                    targetId: target.name,
-                    guesses: [
-                        ...attempts.slice(0, i).map(g => ({ text: g, ts: 0 })),
-                        { text: name, ts: 0 },
-                    ],
-                },
-                characters,
-            )
-            : []
-
-        return { name, traits, isCorrect, idx: i + 1 }
-    })
-
     const yellow = '#ffe81f'
+
+    // Hints: cumulative newly discovered exact tokens, per your engine helper
+    const roundGuesses = attempts.map((text, i) => ({ text, ts: i }))
+    const hints: string[] = []
+    const seen = new Set<string>()
+    for (let i = 0; i < roundGuesses.length; i++) {
+        getNewSharedTraitsSW(
+            { targetId: target.name, guesses: roundGuesses.slice(0, i + 1) },
+            characters
+        ).forEach(t => { if (!seen.has(t)) { seen.add(t); hints.push(t) } })
+    }
+
+    const ordered = [...attempts].reverse()
+    const newestName = ordered[0]
+    const newest = characters.find(c => canon(c.name) === canon(newestName ?? ''))
 
     return (
         <div style={{ marginTop: 8 }}>
+            {/* Hints */}
+            <div style={{ marginBottom: 8, textAlign: 'center' }}>
+                {hints.length
+                    ? hints.map((h, i) => (
+                        <span key={i} className={styles.pillExact} style={{ marginRight: 6, marginBottom: 4 }}>
+                            {h}
+                        </span>
+                    ))
+                    : <span className={styles.pillMuted}>No hints yet</span>}
+            </div>
+
             <div
                 style={{
                     display: 'grid',
@@ -43,45 +65,61 @@ export default function GuessLogSW({ target, characters, attempts }: Props) {
                 }}
             >
                 <div>Guesses</div>
-                <div>Similarities</div>
+                <div>Attributes</div>
             </div>
 
-            {rows.map((r, i) => (
-                <div
-                    key={i}
-                    style={{
-                        display: 'grid',
-                        gridTemplateColumns: '1fr 1fr',
-                        gap: 8,
-                        alignItems: 'center',
-                        padding: '6px 0',
-                        borderTop: i === 0 ? '1px solid rgba(255,255,255,.08)' : undefined,
-                        borderBottom: '1px solid rgba(255,255,255,.08)',
-                    }}
-                >
-                    <div style={{ textAlign: 'center' }}>
-                        <span
-                            className={r.isCorrect ? styles.pillSuccess : styles.pill}
-                            style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}
-                        >
-                            <strong style={{ opacity: 0.9 }}>{r.idx}:</strong>
-                            <span>{r.name}</span>
-                        </span>
-                    </div>
+            {ordered.map((name, idx) => {
+                const isNewest = idx === 0
+                const guess = characters.find(c => canon(c.name) === canon(name))
+                const isCorrect = !!guess && guess.name === target.name
 
-                    <div style={{ textAlign: 'center' }}>
-                        {r.traits.length ? (
-                            (r.traits as string[]).map((t, j) => (
-                                <span key={j} className={styles.pill} style={{ marginRight: 6, marginBottom: 4 }}>
-                                    {t}
-                                </span>
-                            ))
-                        ) : (
-                            <span className={styles.pillMuted}>No new shared traits</span>
-                        )}
+                return (
+                    <div
+                        key={`${name}-${idx}`}
+                        style={{
+                            display: 'grid',
+                            gridTemplateColumns: '1fr 1fr',
+                            gap: 8,
+                            alignItems: 'center',
+                            padding: '6px 0',
+                            borderTop: idx === 0 ? '1px solid rgba(255,255,255,.08)' : undefined,
+                            borderBottom: '1px solid rgba(255,255,255,.08)',
+                        }}
+                    >
+                        <div style={{ textAlign: 'center' }}>
+                            <span
+                                className={isCorrect ? styles.pillExact : styles.pill}
+                                style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}
+                            >
+                                <strong style={{ opacity: 0.9 }}>{ordered.length - idx}:</strong>
+                                <span>{name}</span>
+                            </span>
+                        </div>
+
+                        <div style={{ textAlign: 'center' }}>
+                            {isNewest && newest ? (
+                                SW_TRAIT_KEYS.map(k => {
+                                    const v = String(newest[k] ?? '')
+                                    if (!v) return null
+                                    const tV = String(target[k] ?? '')
+                                    const kind = classifyMatch(k, v, tV)
+                                    const cls =
+                                        kind === 'exact' ? styles.pillExact
+                                            : kind === 'partial' ? styles.pillPartial
+                                                : styles.pill
+                                    return (
+                                        <span key={k} className={cls} style={{ marginRight: 6, marginBottom: 4 }}>
+                                            {k}: {v}
+                                        </span>
+                                    )
+                                })
+                            ) : (
+                                <span className={styles.pillMuted}>—</span>
+                            )}
+                        </div>
                     </div>
-                </div>
-            ))}
+                )
+            })}
         </div>
     )
 }

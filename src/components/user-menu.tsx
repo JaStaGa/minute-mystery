@@ -72,6 +72,15 @@ export default function UserMenu() {
 
     const initial = (profile?.username || "").trim().slice(0, 1).toUpperCase() || "?";
 
+    const onSignOut = async () => {
+        try {
+            await supabase.auth.signOut();
+        } finally {
+            // hard redirect so middleware + client state stay in sync
+            window.location.href = "/";
+        }
+    };
+
     return (
         <div className="flex items-center gap-3">
             <Link href="/profile" aria-label="Open profile" className="inline-block">
@@ -93,6 +102,10 @@ export default function UserMenu() {
             {profile?.username && (
                 <span className="text-sm text-zinc-200 truncate max-w-[10ch]">{profile.username}</span>
             )}
+
+            <button onClick={onSignOut} className="text-sm opacity-80 hover:opacity-100">
+                Sign out
+            </button>
         </div>
     );
 }

@@ -1,4 +1,5 @@
 "use client";
+
 import { useEffect, useReducer, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -10,7 +11,6 @@ import type { SessionState } from "@/game/engine/session";
 import { fetchHP } from "@/game/themes/harry-potter/adapter";
 import type { HPFields } from "@/game/types";
 import GuessLogHP from "@/game/components/GuessLogHP";
-import StartScreen from "@/game/themes/harry-potter/components/StartScreen";
 import styles from "./hp-theme.module.css";
 
 import { sb } from "@/lib/supabase";
@@ -48,7 +48,7 @@ export default function HPGame() {
 
     useEffect(() => {
         fetchHP().then((cs) => {
-            setAll(cs);
+            setAll(cs as HPFields[]);
             setReady(true);
         });
     }, []);
@@ -70,19 +70,21 @@ export default function HPGame() {
         setTimerKey((k) => k + 1);
         setEndReason(null);
         setLastMissed(null);
-        dispatch({ type: "start", target: pickRandom(all) });
+        const pick = pickRandom(all) as unknown as NonNullable<typeof state.target>;
+        dispatch({ type: "start", target: pick });
     }
 
     function onGuess(fd: FormData) {
         if (state.status === "ended") return;
         const name = String(fd.get("guess") || "").trim();
         if (!name) return;
-        const namesLC = new Set(all.map((c) => c.name.toLowerCase()));
-        if (!namesLC.has(name.toLowerCase())) return;
-        if (state.attempts.some((a) => a.toLowerCase() === name.toLowerCase())) return;
 
-        const target = state.target as HPFields | null;
-        const correct = !!target && name.toLowerCase() === target.name.toLowerCase();
+        const namesLC = new Set(all.map((c) => String(c.name || "").toLowerCase()));
+        if (!namesLC.has(name.toLowerCase())) return;
+        if (state.attempts.some((a: string) => a.toLowerCase() === name.toLowerCase())) return;
+
+        const target = state.target as unknown as HPFields | null;
+        const correct = !!target && name.toLowerCase() === String(target.name).toLowerCase();
 
         dispatch({ type: "guess", name });
         setTyped("");
@@ -91,7 +93,8 @@ export default function HPGame() {
             if (advanceTimeout.current) window.clearTimeout(advanceTimeout.current);
             advanceTimeout.current = window.setTimeout(() => {
                 setSolved((prev) => [...prev, target]);
-                dispatch({ type: "next-target", target: pickRandom(all) });
+                const next = pickRandom(all) as unknown as NonNullable<typeof state.target>;
+                dispatch({ type: "next-target", target: next }); // reducer resets mistakes on new target
             }, 1200);
         } else if (!correct && target) {
             setLastMissed(target.name);
@@ -111,20 +114,27 @@ export default function HPGame() {
     useEffect(() => {
         if (state.status === "playing" && state.mistakes >= 5) {
             setEndReason("lost");
-            if (state.target?.name) setLastMissed(state.target.name);
+            const t = state.target as unknown as HPFields | null;
+            if (t?.name) setLastMissed(t.name);
             dispatch({ type: "end" });
         }
     }, [state.mistakes, state.status, state.target]);
 
+    // Save high score exactly once at end, then refresh PB from DB
     useEffect(() => {
         const endedNow = state.status === "ended" || state.mistakes >= 5;
         if (!endedNow || savedRef.current) return;
         savedRef.current = true;
+
         (async () => {
-            await upsertHighScore(supabase, "harry-potter", state.score);
-            if (gameId) {
-                const pb = await getPersonalBest(supabase, gameId);
-                if (pb !== null) setBest(pb);
+            try {
+                await upsertHighScore(supabase, "harry-potter", state.score);
+                if (gameId) {
+                    const pb = await getPersonalBest(supabase, gameId);
+                    if (pb !== null) setBest(pb);
+                }
+            } catch (e) {
+                console.error("save high score failed", e);
             }
         })();
     }, [state.status, state.mistakes, state.score, gameId, supabase]);
@@ -133,66 +143,51 @@ export default function HPGame() {
         setTyped("");
         if (inputRef.current) inputRef.current.focus();
     }
-    useEffect(() => {
-        function onKey(e: KeyboardEvent) {
-            if (e.key === "Escape") clearGuess();
-        }
-        window.addEventListener("keydown", onKey);
-        return () => window.removeEventListener("keydown", onKey);
-    }, []);
 
     const ended = state.status === "ended" || state.mistakes >= 5;
-    const liveMsg =
-        ended ? "Session ended." : state.attempts.length ? `Guess ${state.attempts.length} submitted.` : "";
+    const liveMsg = ended
+        ? "Session ended."
+        : state.attempts.length
+            ? `Guess ${state.attempts.length} submitted.`
+            : "";
 
     return (
         <RequireUsername>
             <div className={styles.hpRoot}>
-                {/* Full viewport height always */}
-                <main className="h-dvh p-4 text-zinc-100">
-                    {/* Ensure inner wrapper fills the height */}
-                    <div className="max-w-3xl mx-auto h-full">
-                        {/* IDLE: center everything, no scroll */}
+                <main className="h-dvh p-4">
+                    <div className="max-w-3xl mx-auto h-full game-screen">
                         {state.status === "idle" && (
-                            <div className="h-full grid place-content-center content-center gap-6 overflow-hidden">
-                                <StartScreen onStart={start} />
-                                <div className="flex justify-center">
-                                    <Link href="/g/harry-potter/leaderboard" className={styles.hpButton}>
-                                        Leaderboard
-                                    </Link>
+                            <div className="h-full grid place-content-center content-center gap-6 text-center">
+                                <div className={styles.panel}>
+                                    <h1 className={styles.hpTitle}>HARRY POTTER GUESSING GAME</h1>
+                                    <div className="mt-3 flex flex-col items-center gap-3">
+                                        <button className={styles.hpButton} onClick={start}>Start</button>
+                                        <Link href="/g/harry-potter/leaderboard" className={styles.hpButton}>Leaderboard</Link>
+                                    </div>
                                 </div>
                             </div>
                         )}
 
                         {state.status === "playing" && state.target && (
                             <div className="space-y-4">
-                                <h1 className={styles.hpTitle}>Harry Potter Guessing Game</h1>
+                                <h1 className={styles.hpTitle}>HARRY POTTER GUESSING GAME</h1>
 
                                 <div className={styles.statsRow}>
-                                    <div className={styles.stat}>
-                                        <span className={styles.statLabel}>Score</span> {state.score}
-                                    </div>
-                                    <div className={styles.stat}>
-                                        <span className={styles.statLabel}>Round</span> {state.round}
-                                    </div>
-                                    <div className={styles.stat}>
-                                        <span className={styles.statLabel}>Mistakes</span> {state.mistakes}/5
-                                    </div>
-
+                                    <div className={styles.stat}><span className={styles.statLabel}>Score</span> {state.score}</div>
+                                    <div className={styles.stat}><span className={styles.statLabel}>Round</span> {state.round}</div>
+                                    <div className={styles.stat}><span className={styles.statLabel}>Mistakes</span> {state.mistakes}/5</div>
                                     {state.status !== "playing" && best !== null && (
-                                        <div className={styles.stat}>
-                                            <span className={styles.statLabel}>Personal Best</span> {best}
-                                        </div>
+                                        <div className={styles.stat}><span className={styles.statLabel}>Personal Best</span> {best}</div>
                                     )}
-
-                                    <div className={styles.stat}>
+                                    <div className={`${styles.stat} ${styles.timer}`}>
                                         <span className={styles.statLabel}>Time</span>
                                         <Countdown
                                             key={timerKey}
                                             ms={60_000}
                                             onEnd={() => {
                                                 setEndReason("timeout");
-                                                if (state.target?.name) setLastMissed(state.target.name);
+                                                const t = state.target as unknown as HPFields | null;
+                                                if (t?.name) setLastMissed(t.name);
                                                 dispatch({ type: "end" });
                                             }}
                                             onTick={(ms) => setMsLeft(ms)}
@@ -207,73 +202,38 @@ export default function HPGame() {
                                     />
                                 </div>
 
-                                <div aria-live="polite" className="sr-only">
-                                    {liveMsg}
-                                </div>
+                                <div aria-live="polite" className="sr-only">{liveMsg}</div>
 
                                 <form action={onGuess} className={styles.formColumn} autoComplete="off">
-                                    <label htmlFor="guess" className="sr-only">
-                                        Guess
-                                    </label>
-
-                                    <div style={{ position: "relative", display: "flex", alignItems: "center", width: "100%" }}>
-                                        <input
-                                            id="guess"
-                                            name="guess"
-                                            list="hp-names"
-                                            autoComplete="off"
-                                            autoCorrect="off"
-                                            autoCapitalize="off"
-                                            spellCheck={false}
-                                            ref={inputRef}
-                                            value={typed}
-                                            onChange={(e) => setTyped(e.target.value)}
-                                            className={`${styles.hpInput} ${styles.hpInputWide} ${styles.hpInputFlex}`}
-                                            placeholder="Type a character name…"
-                                            aria-label="Guess input"
-                                            style={{ paddingRight: 48 }}
-                                        />
-                                        {typed && (
-                                            <button
-                                                type="button"
-                                                onClick={clearGuess}
-                                                aria-label="Clear input"
-                                                title="Clear"
-                                                style={{
-                                                    position: "absolute",
-                                                    right: 10,
-                                                    top: "50%",
-                                                    transform: "translateY(-50%)",
-                                                    border: "none",
-                                                    background: "transparent",
-                                                    cursor: "pointer",
-                                                    fontSize: 18,
-                                                    lineHeight: 1,
-                                                    padding: 4,
-                                                    opacity: 1,
-                                                    zIndex: 20,
-                                                    color: "#4b2e2e",
-                                                    fontWeight: 700,
-                                                }}
-                                            >
-                                                ×
-                                            </button>
-                                        )}
-                                    </div>
-
-                                    <datalist id="hp-names">
-                                        {all.map((c) => (
-                                            <option key={c.name} value={c.name} />
-                                        ))}
-                                    </datalist>
-
-                                    <button type="submit" className={styles.hpButtonSm}>
-                                        Guess
-                                    </button>
+                                    <label htmlFor="guess" className="sr-only">Guess</label>
+                                    <input
+                                        id="guess"
+                                        name="guess"
+                                        list="hp-names"
+                                        autoComplete="off"
+                                        autoCorrect="off"
+                                        autoCapitalize="off"
+                                        spellCheck={false}
+                                        ref={inputRef}
+                                        value={typed}
+                                        onChange={(e) => setTyped(e.target.value)}
+                                        className={`${styles.hpInput} ${styles.hpInputWide} ${styles.hpInputFlex}`}
+                                        placeholder="Type a character name…"
+                                        aria-label="Guess input"
+                                    />
+                                    <button type="submit" className={styles.hpButtonSm}>Guess</button>
                                 </form>
 
+                                <datalist id="hp-names">
+                                    {all.map((c) => (<option key={c.name} value={c.name} />))}
+                                </datalist>
+
                                 <div className={styles.tableWrap}>
-                                    <GuessLogHP target={state.target} characters={all} attempts={state.attempts} />
+                                    <GuessLogHP
+                                        target={state.target as unknown as HPFields}
+                                        characters={all as HPFields[]}
+                                        attempts={state.attempts}
+                                    />
                                 </div>
 
                                 {solved.length > 0 && (
@@ -281,10 +241,7 @@ export default function HPGame() {
                                         <h2 className="text-lg font-semibold">Correct this session</h2>
                                         <ul className="space-y-2 max-w-2xl mx-auto">
                                             {solved.map((c, i) => (
-                                                <li
-                                                    key={`${c.name}-${i}`}
-                                                    className="flex items-center gap-3 bg-[#d3ba93] border border-[#a47148] rounded p-2 text-[#4b2e2e]"
-                                                >
+                                                <li key={`${c.name}-${i}`} className="flex items-center gap-3 rounded p-2" style={{ background: "#d3ba93", border: "1px solid #a47148" }}>
                                                     <Image
                                                         src={c.image || "https://via.placeholder.com/60x80"}
                                                         alt={c.name}
@@ -295,7 +252,6 @@ export default function HPGame() {
                                                     />
                                                     <div className="leading-tight text-left">
                                                         <div className="font-medium">{c.name}</div>
-                                                        <div className="text-sm opacity-80">{c.house}</div>
                                                     </div>
                                                 </li>
                                             ))}
@@ -306,88 +262,36 @@ export default function HPGame() {
                         )}
 
                         {ended && (
-                            <div
-                                role="dialog"
-                                aria-labelledby="gameOverTitle"
-                                className="space-y-4 text-center"
-                                style={{
-                                    marginTop: 12,
-                                    padding: 16,
-                                    borderRadius: 12,
-                                    border: "1px solid #a47148",
-                                    background: "#f3e6cf",
-                                }}
-                            >
-                                <h2
-                                    id="gameOverTitle"
-                                    className={styles.hpTitle}
-                                    style={{ margin: 0, fontSize: "clamp(1.6rem, 5.5vw, 2.4rem)" }}
-                                >
-                                    {endReason === "timeout" ? "Time’s up" : "Game over"}
-                                </h2>
+                            <div role="dialog" aria-labelledby="gameOverTitle" className="space-y-4 text-center" style={{ marginTop: 20 }}>
+                                <div className={styles.panel}>
+                                    <h2 id="gameOverTitle" className={styles.hpTitle} style={{ margin: 0, fontSize: "clamp(1.6rem, 5.5vw, 2.4rem)" }}>
+                                        {endReason === "timeout" ? "Time’s up" : "Game over"}
+                                    </h2>
 
-                                <div className={styles.statsRow} style={{ justifyContent: "center" }}>
-                                    <div className={styles.stat}>
-                                        <span className={styles.statLabel}>Final Score</span> {state.score}
+                                    <div className={styles.statsRow} style={{ justifyContent: "center", marginTop: 8 }}>
+                                        <div className={styles.stat}><span className={styles.statLabel}>Final Score</span> {state.score}</div>
+                                        {best !== null && (<div className={styles.stat}><span className={styles.statLabel}>Personal Best</span> {best}</div>)}
                                     </div>
-                                    {best !== null && (
-                                        <div className={styles.stat}>
-                                            <span className={styles.statLabel}>Personal Best</span> {best}
-                                        </div>
-                                    )}
-                                </div>
 
-                                {lastMissed && (
-                                    <div style={{ width: "100%", display: "grid", placeItems: "center" }}>
-                                        <div
-                                            style={{
-                                                width: "100%",
-                                                maxWidth: 720,
-                                                border: "1px solid #a47148",
-                                                background: "#ead7b7",
-                                                borderRadius: 12,
-                                                padding: 12,
-                                            }}
-                                        >
-                                            <div
-                                                style={{
-                                                    textTransform: "uppercase",
-                                                    letterSpacing: "0.06em",
-                                                    fontWeight: 600,
-                                                    textAlign: "center",
-                                                    color: "#a47148",
-                                                }}
-                                            >
-                                                Missed: {lastMissed}
-                                            </div>
-
+                                    {lastMissed && (
+                                        <div className="mt-3" style={{ borderRadius: 16, padding: 12, background: "#d3ba93", border: "1px solid #a47148" }}>
+                                            <div className={styles.hpTitle} style={{ fontSize: 18, marginBottom: 8 }}>Missed: {lastMissed}</div>
                                             {(() => {
-                                                const missed = all.find((c) => c.name === lastMissed);
-                                                const img = missed?.image || "";
+                                                const missed = (all as HPFields[]).find((c) => c.name === lastMissed)
+                                                const img = missed?.image || ""
                                                 return img ? (
-                                                    <div style={{ marginTop: 8, display: "grid", placeItems: "center" }}>
-                                                        <Image
-                                                            src={img}
-                                                            alt={lastMissed}
-                                                            width={96}
-                                                            height={128}
-                                                            className="rounded object-cover"
-                                                            unoptimized
-                                                        />
+                                                    <div style={{ marginTop: 4, display: "grid", placeItems: "center" }}>
+                                                        <Image src={img} alt={lastMissed} width={96} height={128} className="rounded object-cover" unoptimized />
                                                     </div>
-                                                ) : null;
+                                                ) : null
                                             })()}
                                         </div>
-                                    </div>
-                                )}
+                                    )}
 
-                                <div className="flex justify-center gap-3">
-                                    <button className={styles.hpButton} onClick={start}>
-                                        Play again
-                                    </button>
-                                    <Link href="/g/harry-potter/leaderboard" className={styles.hpButton}>
-                                        View leaderboard
-                                    </Link>
+                                    <div className="mt-3 flex justify-center gap-3">
+                                        <button className={styles.hpButton} onClick={start}>Play again</button>
+                                        <Link href="/g/harry-potter/leaderboard" className={styles.hpButton}>View leaderboard</Link>
+                                    </div>
                                 </div>
                             </div>
                         )}

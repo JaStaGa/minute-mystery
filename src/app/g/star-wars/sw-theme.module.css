@@ -42,8 +42,30 @@
     font-size: 28px;
     line-height: 1.1;
 }
-.fallbackU{font-family:system-ui,sans-serif;font-weight:900;letter-spacing:.08em}
-.fallbackI{font-family:system-ui,sans-serif;font-weight:900;letter-spacing:.08em}
+
+.fallbackU {
+    font-family: system-ui, sans-serif;
+    font-weight: 900;
+    letter-spacing: .08em
+}
+
+.fallbackI {
+    font-family: system-ui, sans-serif;
+    font-weight: 900;
+    letter-spacing: .08em
+}
+
+.fallbackO {
+    font-family: system-ui, sans-serif;
+    font-weight: 900;
+    letter-spacing: .08em
+}
+
+.fallbackV {
+    font-family: system-ui, sans-serif;
+    font-weight: 900;
+    letter-spacing: .08em
+}
 
 
 @media (max-width:360px) {
@@ -75,6 +97,21 @@
 .pillMuted {
     composes: pill;
     opacity: .55;
+}
+
+/* exact / partial chips */
+.pillExact {
+    composes: pill;
+    background: #22c55e;
+    color: #111;
+    border-color: #22c55e;
+}
+
+.pillPartial {
+    composes: pill;
+    background: #ffe81f;
+    color: #211;
+    border-color: #ffe81f;
 }
 
 /* progress */
