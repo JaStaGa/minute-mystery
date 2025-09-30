@@ -139,11 +139,6 @@ export default function HPGame() {
         })();
     }, [state.status, state.mistakes, state.score, gameId, supabase]);
 
-    function clearGuess() {
-        setTyped("");
-        if (inputRef.current) inputRef.current.focus();
-    }
-
     const ended = state.status === "ended" || state.mistakes >= 5;
     const liveMsg = ended
         ? "Session ended."

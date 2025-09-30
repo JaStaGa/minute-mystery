@@ -61,7 +61,7 @@ export default function NGGame() {
         savedRef.current = false;
         setTyped("");
         setMsLeft(60_000);
-        setTimerKey(k => k + 1);
+        setTimerKey((k) => k + 1);
         setEndReason(null);
         setLastMissed(null);
         const pick = pickRandom(all) as unknown as NonNullable<typeof state.target>;
@@ -73,9 +73,9 @@ export default function NGGame() {
         const name = String(fd.get("guess") || "").trim();
         if (!name) return;
 
-        const namesLC = new Set(all.map(c => c.name.toLowerCase()));
+        const namesLC = new Set(all.map((c) => c.name.toLowerCase()));
         if (!namesLC.has(name.toLowerCase())) return;
-        if (state.attempts.some(a => a.toLowerCase() === name.toLowerCase())) return;
+        if (state.attempts.some((a) => a.toLowerCase() === name.toLowerCase())) return;
 
         const target = state.target as unknown as NGFields | null;
         const correct = !!target && name.toLowerCase() === target.name.toLowerCase();
@@ -87,15 +87,17 @@ export default function NGGame() {
             if (advanceTimeout.current) window.clearTimeout(advanceTimeout.current);
             advanceTimeout.current = window.setTimeout(() => {
                 const next = pickRandom(all) as unknown as NonNullable<typeof state.target>;
-                dispatch({ type: "next-target", target: next }); // resets mistakes in reducer
+                dispatch({ type: "next-target", target: next }); // reducer should reset mistakes
             }, 1200);
         } else if (!correct && target) {
             setLastMissed(target.name);
         }
     }
 
-    useEffect(() => () => {
-        if (advanceTimeout.current) window.clearTimeout(advanceTimeout.current);
+    useEffect(() => {
+        return () => {
+            if (advanceTimeout.current) window.clearTimeout(advanceTimeout.current);
+        };
     }, []);
 
     useEffect(() => {
@@ -141,8 +143,12 @@ export default function NGGame() {
                             <div className={styles.panel}>
                                 <h1 className={styles.ngTitle}>NEW GAME</h1>
                                 <div className="mt-3 flex flex-col items-center gap-3">
-                                    <button className={styles.ngButton} onClick={start}>Start</button>
-                                    <Link href="/g/new-game/leaderboard" className={styles.ngButton}>Leaderboard</Link>
+                                    <button className={styles.ngButton} onClick={start}>
+                                        Start
+                                    </button>
+                                    <Link href="/g/new-game/leaderboard" className={styles.ngButton}>
+                                        Leaderboard
+                                    </Link>
                                 </div>
                             </div>
                         </div>
@@ -153,11 +159,19 @@ export default function NGGame() {
                             <h1 className={styles.ngTitle}>NEW GAME</h1>
 
                             <div className={styles.statsRow}>
-                                <div className={styles.stat}><span className={styles.statLabel}>Score</span> {state.score}</div>
-                                <div className={styles.stat}><span className={styles.statLabel}>Round</span> {state.round}</div>
-                                <div className={styles.stat}><span className={styles.statLabel}>Mistakes</span> {state.mistakes}/5</div>
-                                {state.status !== "playing" && best !== null && (
-                                    <div className={styles.stat}><span className={styles.statLabel}>Personal Best</span> {best}</div>
+                                <div className={styles.stat}>
+                                    <span className={styles.statLabel}>Score</span> {state.score}
+                                </div>
+                                <div className={styles.stat}>
+                                    <span className={styles.statLabel}>Round</span> {state.round}
+                                </div>
+                                <div className={styles.stat}>
+                                    <span className={styles.statLabel}>Mistakes</span> {state.mistakes}/5
+                                </div>
+                                {best !== null && (
+                                    <div className={styles.stat}>
+                                        <span className={styles.statLabel}>Personal Best</span> {best}
+                                    </div>
                                 )}
                                 <div className={styles.stat}>
                                     <span className={styles.statLabel}>Time</span>
@@ -170,46 +184,73 @@ export default function NGGame() {
                                             if (t?.name) setLastMissed(t.name);
                                             dispatch({ type: "end" });
                                         }}
-                                        onTick={ms => setMsLeft(ms)}
+                                        onTick={(ms) => setMsLeft(ms)}
                                     />
                                 </div>
                             </div>
 
-                            <div className={styles.timeTrack}>
-                                <div className={styles.timeFill} style={{ width: `${Math.max(0, Math.min(100, (1 - msLeft / 60000) * 100))}%` }} />
+                            <div className={styles.timeTrack} aria-hidden>
+                                <div
+                                    className={styles.timeFill}
+                                    style={{ width: `${Math.max(0, Math.min(100, (1 - msLeft / 60000) * 100))}%` }}
+                                />
                             </div>
 
-                            <div aria-live="polite" className="sr-only">{liveMsg}</div>
+                            <div aria-live="polite" className="sr-only">
+                                {liveMsg}
+                            </div>
 
                             <form action={onGuess} className={styles.formColumn} autoComplete="off">
-                                <label htmlFor="guess" className="sr-only">Guess</label>
+                                <label htmlFor="guess" className="sr-only">
+                                    Guess
+                                </label>
                                 <div style={{ position: "relative", display: "flex", alignItems: "center", width: "100%" }}>
                                     <input
-                                        id="guess" name="guess" list="ng-names"
-                                        autoComplete="off" autoCorrect="off" autoCapitalize="off" spellCheck={false}
-                                        ref={inputRef} value={typed} onChange={e => setTyped(e.target.value)}
-                                        className={styles.ngInput} placeholder="Type a character name…" aria-label="Guess input" style={{ paddingRight: 48 }}
+                                        id="guess"
+                                        name="guess"
+                                        list="ng-names"
+                                        autoComplete="off"
+                                        autoCorrect="off"
+                                        autoCapitalize="off"
+                                        spellCheck={false}
+                                        ref={inputRef}
+                                        value={typed}
+                                        onChange={(e) => setTyped(e.target.value)}
+                                        className={styles.ngInput}
+                                        placeholder="Type a character name…"
+                                        aria-label="Guess input"
+                                        style={{ paddingRight: 48 }}
                                     />
                                     {typed && (
-                                        <button type="button" onClick={clearGuess} aria-label="Clear input" title="Clear"
-                                            className={styles.ngButton} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)" }}>
+                                        <button
+                                            type="button"
+                                            onClick={clearGuess}
+                                            aria-label="Clear input"
+                                            title="Clear"
+                                            className={styles.ngButton}
+                                            style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)" }}
+                                        >
                                             ×
                                         </button>
                                     )}
                                 </div>
 
                                 <datalist id="ng-names">
-                                    {all.map(c => (<option key={c.name} value={c.name} />))}
+                                    {all.map((c) => (
+                                        <option key={c.name} value={c.name} />
+                                    ))}
                                 </datalist>
 
-                                <button type="submit" className={styles.ngButton}>Guess</button>
+                                <button type="submit" className={styles.ngButton}>
+                                    Guess
+                                </button>
                             </form>
 
                             <div className={styles.tableWrap}>
                                 <GuessLogNG
                                     round={{
                                         targetId: (state.target as unknown as NGFields).name,
-                                        guesses: state.attempts.map(a => ({ text: a, ts: Date.now() })),
+                                        guesses: state.attempts.map((a) => ({ text: a, ts: Date.now() })),
                                     }}
                                     characters={all}
                                 />
@@ -225,19 +266,31 @@ export default function NGGame() {
                                 </h2>
 
                                 <div className={styles.statsRow} style={{ justifyContent: "center", marginTop: 8 }}>
-                                    <div className={styles.stat}><span className={styles.statLabel}>Final Score</span> {state.score}</div>
-                                    {best !== null && (<div className={styles.stat}><span className={styles.statLabel}>Personal Best</span> {best}</div>)}
+                                    <div className={styles.stat}>
+                                        <span className={styles.statLabel}>Final Score</span> {state.score}
+                                    </div>
+                                    {best !== null && (
+                                        <div className={styles.stat}>
+                                            <span className={styles.statLabel}>Personal Best</span> {best}
+                                        </div>
+                                    )}
                                 </div>
 
                                 {lastMissed && (
                                     <div className={`mt-3 ${styles.guessCard}`} style={{ borderRadius: 16, padding: 12 }}>
-                                        <div className={styles.ngTitle} style={{ fontSize: 18 }}>Missed: {lastMissed}</div>
+                                        <div className={styles.ngTitle} style={{ fontSize: 18 }}>
+                                            Missed: {lastMissed}
+                                        </div>
                                     </div>
                                 )}
 
                                 <div className="mt-3 flex justify-center gap-3">
-                                    <button className={styles.ngButton} onClick={start}>Play again</button>
-                                    <Link href="/g/new-game/leaderboard" className={styles.ngButton}>View leaderboard</Link>
+                                    <button className={styles.ngButton} onClick={start}>
+                                        Play again
+                                    </button>
+                                    <Link href="/g/new-game/leaderboard" className={styles.ngButton}>
+                                        View leaderboard
+                                    </Link>
                                 </div>
                             </div>
                         </div>

@@ -20,12 +20,8 @@ function kvPairs(row: HPFields): Array<[string, string]> {
 
 export default function GuessLogHP({ target, characters, attempts }: Props) {
     const latestIdx = attempts.length - 1
-    const latestName = latestIdx >= 0 ? attempts[latestIdx] : null
-    const latest = latestName
-        ? characters.find((c) => c.name.toLowerCase() === latestName.toLowerCase())
-        : undefined
 
-    // ✅ PERSISTENT HINTS: accumulate exact matches from *all* guesses this round
+    // PERSISTENT HINTS: accumulate exact matches from *all* guesses this round
     const hintsMap = new Map<string, string>()
     attempts.forEach((name) => {
         const g = characters.find((c) => c.name.toLowerCase() === name.toLowerCase())

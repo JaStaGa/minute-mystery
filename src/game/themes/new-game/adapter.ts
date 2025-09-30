@@ -2,19 +2,12 @@
 import type { NGFields } from "@/game/types";
 import characters from "@/game/data/ng/characters";
 
-// Local trait typing for NG
 export type NGTraitKey = "field1" | "field2" | "field3" | "field4" | "field5" | "field6";
-export const NG_TRAIT_KEYS: readonly NGTraitKey[] = [
-    "field1",
-    "field2",
-    "field3",
-    "field4",
-    "field5",
-    "field6",
-] as const;
+export const NG_TRAIT_KEYS: readonly NGTraitKey[] = ["field1", "field2", "field3", "field4", "field5", "field6"] as const;
 
-// Treat some fields as multi-valued
-export const NG_MULTI_KEYS = new Set<NGTraitKey>(["field2", "field3", "field5"]);
+// multi-valued fields
+const NG_MULTI_KEYS_SET = new Set<NGTraitKey>(["field2", "field3", "field5"]);
+export const NG_MULTI_KEYS = NG_MULTI_KEYS_SET; // keep named export for any direct imports
 
 export const TRAIT_LABELS: Record<NGTraitKey, string> = {
     field1: "Field 1",
@@ -25,28 +18,19 @@ export const TRAIT_LABELS: Record<NGTraitKey, string> = {
     field6: "Field 6",
 };
 
-// Basic normalizer + splitter
-const norm = (s: string) =>
-    s.toLowerCase().replace(/[_\-./]+/g, " ").replace(/\s+/g, " ").trim();
+const norm = (s: string) => s.toLowerCase().replace(/[_\-./]+/g, " ").replace(/\s+/g, " ").trim();
+const splitMulti = (s: string) => s.split(/[;,/]| and |\|/gi).map((t) => t.trim()).filter(Boolean);
 
-const splitMulti = (s: string) =>
-    s
-        .split(/[;,/]| and |\|/gi)
-        .map((t) => t.trim())
-        .filter(Boolean);
-
-// Adapter shape consumed by engine/components
 type Row = NGFields;
 type Key = NGTraitKey;
 
-const getId = (r: Row) => r.name; // using name as id
+const getId = (r: Row) => r.name;
 const getName = (r: Row) => r.name;
 const getImage = (r: Row) => r.image ?? "";
-
 const getValues = (r: Row, k: Key): string[] => {
     const raw = (r[k] as string) || "";
     if (!raw) return [];
-    return NG_MULTI_KEYS.has(k) ? splitMulti(raw) : [raw];
+    return NG_MULTI_KEYS_SET.has(k) ? splitMulti(raw) : [raw];
 };
 
 const normalizeGuess = (s: string) => norm(s);
@@ -58,6 +42,7 @@ const adapter = {
     list: characters,
     traitKeys: NG_TRAIT_KEYS,
     traitLabels: TRAIT_LABELS,
+    multiKeys: Array.from(NG_MULTI_KEYS_SET) as NGTraitKey[], // <-- used by GuessLogNG
     getId,
     getName,
     getImage,
@@ -67,5 +52,3 @@ const adapter = {
 };
 
 export default adapter;
-
-

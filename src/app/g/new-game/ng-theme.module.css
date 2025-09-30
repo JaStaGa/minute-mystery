@@ -6,7 +6,7 @@
 
 .ngRoot {
     min-height: 100dvh;
-    background: #0b0 url("/images/ng/bg.jpg") center/cover no-repeat fixed
+    background: #0b0 url("/images/ng/bg.jpg") center/cover no-repeat fixed;
 }
 
 .ngTitle {
@@ -16,7 +16,7 @@
     color: #ffd24a;
     text-shadow: 0 0 10px rgba(255, 210, 74, .25);
     line-height: 1.1;
-    font-size: 28px
+    font-size: 28px;
 }
 
 .panel {
@@ -26,7 +26,7 @@
     border-radius: 16px;
     background: rgba(0, 0, 0, .45);
     border: 1px solid rgba(255, 255, 255, .08);
-    backdrop-filter: saturate(110%) blur(2px)
+    backdrop-filter: saturate(110%) blur(2px);
 }
 
 .statsRow {
@@ -34,7 +34,7 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px;
     max-width: 420px;
-    margin: .25rem auto .5rem
+    margin: .25rem auto .5rem;
 }
 
 .stat {
@@ -45,18 +45,18 @@
     text-align: center;
     color: #ffd24a;
     font-size: .9rem;
-    line-height: 1.1
+    line-height: 1.1;
 }
 
 .statLabel {
     opacity: .85;
-    font-size: .875rem
+    font-size: .875rem;
 }
 
 .formColumn {
     display: flex;
     flex-direction: column;
-    gap: .75rem
+    gap: .75rem;
 }
 
 .ngInput {
@@ -65,7 +65,12 @@
     border: 1px solid rgba(255, 255, 255, .18);
     border-radius: 12px;
     padding: .8rem 1rem;
-    width: 100%
+    width: 100%;
+}
+
+.ngInput:focus-visible {
+    outline: 2px solid #ffd24a;
+    outline-offset: 2px;
 }
 
 .ngButton {
@@ -75,7 +80,22 @@
     background: #ffd24a;
     color: #000;
     text-align: center;
-    border: 1px solid #a47148
+    border: 1px solid #a47148;
+    text-decoration: none;
+    transition: transform .06s ease, filter .12s ease;
+}
+
+.ngButton:hover {
+    filter: brightness(1.05);
+}
+
+.ngButton:active {
+    transform: translateY(1px);
+}
+
+.ngButton:focus-visible {
+    outline: 2px solid #ffd24a;
+    outline-offset: 2px;
 }
 
 .timeTrack {
@@ -84,7 +104,7 @@
     border-radius: 999px;
     background: rgba(255, 255, 255, .12);
     position: relative;
-    overflow: hidden
+    overflow: hidden;
 }
 
 .timeFill {
@@ -93,10 +113,13 @@
     top: 0;
     height: 100%;
     background: #ffd24a;
-    transition: width .12s linear
+    transition: width .12s linear;
 }
 
-.pill {
+/* Base pill + variants (no `composes`) */
+.pill,
+.pillMuted,
+.pillSuccess {
     display: inline-block;
     padding: .35rem .6rem;
     border-radius: 999px;
@@ -104,31 +127,30 @@
     border: 1px solid rgba(255, 255, 255, .16);
     color: #eee;
     font-size: .875rem;
-    line-height: 1
+    line-height: 1;
+    white-space: nowrap;
 }
 
 .pillMuted {
-    composes: pill;
-    opacity: .55
+    opacity: .55;
 }
 
 .pillSuccess {
-    composes: pill;
     background: #ffd24a;
     color: #111;
-    border-color: #ffd24a
+    border-color: #ffd24a;
 }
 
 .tableWrap {
-    margin-top: .5rem
+    margin-top: .5rem;
 }
 
 .guessCard {
     background: #0a0a0a;
     border: 1px solid rgba(255, 255, 255, .08);
-    border-radius: 16px
+    border-radius: 16px;
 }
 
 .endBlock {
-    margin-top: 20px
+    margin-top: 20px;
 }

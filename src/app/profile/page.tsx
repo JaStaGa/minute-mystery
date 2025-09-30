@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { sb } from "@/lib/supabase";
 import { fetchHP } from "@/game/themes/harry-potter/adapter";
 import { fetchSW } from "@/game/themes/star-wars/adapter";
@@ -12,7 +11,6 @@ type ProfileRow = { id: string; username: string | null; icon_url: string | null
 
 export default function ProfilePage() {
     const supabase = sb();
-    const router = useRouter();
 
     const [userId, setUserId] = useState<string | null>(null);
     const [email, setEmail] = useState<string>("");

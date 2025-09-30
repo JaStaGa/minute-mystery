@@ -4,6 +4,7 @@ import Link from "next/link";
 import { sb } from "@/lib/supabase";
 import hpStyles from "@/app/g/harry-potter/hp-theme.module.css";
 import nrtStyles from "@/app/g/naruto/naruto-theme.module.css";
+import ngStyles from "@/app/g/new-game/ng-theme.module.css";
 
 type Game = { id: number; name: string };
 type HS = { user_id: string; score: number; updated_at: string };
@@ -17,7 +18,6 @@ export default function Leaderboard({
 }) {
     const supabase = sb();
 
-    // unwrap params once
     const [slug, setSlug] = useState<string | null>(null);
     useEffect(() => {
         let alive = true;
@@ -37,12 +37,11 @@ export default function Leaderboard({
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
     useEffect(() => {
-        if (!slug) return; // guard until slug is ready
+        if (!slug) return;
         (async () => {
             setLoading(true);
             setErrorMsg(null);
 
-            // 1) resolve game
             const { data: g, error: eGame } = await supabase
                 .from("games")
                 .select("id,name")
@@ -63,7 +62,6 @@ export default function Leaderboard({
             const gameRow = g as Game;
             setGame(gameRow);
 
-            // 2) top 10 scores
             const { data: hs, error: eHS } = await supabase
                 .from("high_scores")
                 .select("user_id,score,updated_at")
@@ -79,7 +77,6 @@ export default function Leaderboard({
             }
             const top: HS[] = (hs ?? []) as HS[];
 
-            // 3) usernames + icons
             const userIds = Array.from(new Set(top.map((r) => r.user_id))).filter(Boolean);
             let profs: unknown = [];
             if (userIds.length) {
@@ -116,6 +113,7 @@ export default function Leaderboard({
     const isHP = slug === "harry-potter";
     const isSW = slug === "star-wars";
     const isNRT = slug === "naruto";
+    const isNG = slug === "new-game";
 
     const PlayerCell = ({
         username,
@@ -148,7 +146,7 @@ export default function Leaderboard({
         );
     };
 
-    // Star Wars themed
+    // Star Wars
     if (isSW) {
         const yellow = "#ffe81f";
         const border = "#2b2b2b";
@@ -253,7 +251,7 @@ export default function Leaderboard({
         );
     }
 
-    // Harry Potter themed
+    // Harry Potter
     if (isHP) {
         return (
             <div className={hpStyles.hpRoot}>
@@ -379,7 +377,7 @@ export default function Leaderboard({
         );
     }
 
-    // Naruto themed
+    // Naruto
     if (isNRT) {
         const border = "#233127";
         return (
@@ -493,7 +491,122 @@ export default function Leaderboard({
         );
     }
 
-    // Minimal fallback for other themes
+    // New Game
+    if (isNG) {
+        const border = "rgba(255,255,255,.18)";
+        const accent = "#ffd24a";
+        return (
+            <div className={ngStyles.ngRoot}>
+                <main className="min-h-dvh p-4 text-zinc-100">
+                    <div className="max-w-4xl mx-auto">
+                        <div className="flex items-start justify-between gap-4 mb-4">
+                            <h1 className={ngStyles.ngTitle} style={{ fontSize: "clamp(1.8rem,5vw,2.6rem)" }}>
+                                {title}
+                            </h1>
+                            <Link href="/g/new-game" className={ngStyles.ngButton}>
+                                Back to game
+                            </Link>
+                        </div>
+
+                        <div className={ngStyles.panel}>
+                            <div style={{ overflowX: "auto" }}>
+                                <table style={{ width: "100%", borderCollapse: "separate", borderSpacing: 0, color: "#eee" }}>
+                                    <thead>
+                                        <tr
+                                            style={{
+                                                background: "rgba(0,0,0,.45)",
+                                                color: accent,
+                                                textAlign: "left",
+                                                fontWeight: 800,
+                                                letterSpacing: "0.04em",
+                                            }}
+                                        >
+                                            {["Rank", "Player", "Score", "Date"].map((h, i) => (
+                                                <th
+                                                    key={h}
+                                                    style={{
+                                                        padding: "10px 12px",
+                                                        borderTopLeftRadius: i === 0 ? 10 : 0,
+                                                        borderTopRightRadius: i === 3 ? 10 : 0,
+                                                        borderBottom: `1px solid ${border}`,
+                                                    }}
+                                                >
+                                                    {h}
+                                                </th>
+                                            ))}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {loading ? (
+                                            <tr>
+                                                <td colSpan={4} style={{ padding: "12px", textAlign: "center", opacity: 0.7 }}>
+                                                    Loading…
+                                                </td>
+                                            </tr>
+                                        ) : rows.length === 0 ? (
+                                            <tr>
+                                                <td colSpan={4} style={{ padding: "12px", textAlign: "center", opacity: 0.7 }}>
+                                                    No scores yet
+                                                </td>
+                                            </tr>
+                                        ) : (
+                                            rows.map((r, i) => (
+                                                <tr key={`${r.user_id}-${r.updated_at}`} style={{ background: i % 2 ? "#0a0a0a" : "#000000" }}>
+                                                    <td style={{ padding: "10px 12px", borderBottom: `1px solid ${border}` }}>{i + 1}</td>
+                                                    <td style={{ padding: "10px 12px", borderBottom: `1px solid ${border}` }}>
+                                                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                                            <div
+                                                                style={{
+                                                                    width: 24,
+                                                                    height: 24,
+                                                                    borderRadius: 9999,
+                                                                    overflow: "hidden",
+                                                                    border: `1px solid ${border}`,
+                                                                    background: "#121212",
+                                                                }}
+                                                                title={r.username ?? r.user_id.slice(0, 8)}
+                                                            >
+                                                                {r.icon_url ? (
+                                                                    // eslint-disable-next-line @next/next/no-img-element
+                                                                    <img src={r.icon_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                                                                ) : (
+                                                                    <div
+                                                                        style={{
+                                                                            width: "100%",
+                                                                            height: "100%",
+                                                                            display: "grid",
+                                                                            placeItems: "center",
+                                                                            fontSize: 10,
+                                                                            opacity: 0.8,
+                                                                        }}
+                                                                    >
+                                                                        {(r.username ?? r.user_id).slice(0, 2).toUpperCase()}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                            <span>{r.username ?? r.user_id.slice(0, 8)}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td style={{ padding: "10px 12px", borderBottom: `1px solid ${border}`, fontWeight: 800 }}>
+                                                        {r.score}
+                                                    </td>
+                                                    <td style={{ padding: "10px 12px", borderBottom: `1px solid ${border}` }}>
+                                                        {r.updated_at ? new Date(r.updated_at).toLocaleDateString() : ""}
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </main>
+            </div>
+        );
+    }
+
+    // Fallback
     return (
         <main className="min-h-dvh p-6 text-zinc-100">
             <div className="max-w-2xl mx-auto space-y-4">
