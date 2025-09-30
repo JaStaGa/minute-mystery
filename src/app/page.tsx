@@ -51,6 +51,7 @@ export default function Home() {
           <ThemeCard name="Harry Potter" slug="harry-potter" />
           <ThemeCard name="Star Wars" slug="star-wars" />
           <ThemeCard name="Naruto" slug="naruto" />
+          <ThemeCard name="New Game" slug="new-game" /> 
         </div>
       </div>
     </main>

@@ -195,3 +195,53 @@ export function reducerSW(state: SessionStateSW, action: ActionSW): SessionState
             return state;
     }
 }
+
+// ---- NG reducer (same scoring + 5-mistake rule)
+import type { NGFields } from "@/game/types";
+
+export type SessionStateNG = {
+    status: "idle" | "playing" | "ended";
+    target: NGFields | null;
+    attempts: string[];
+    score: number;
+    mistakes: number;  // mistakes this round
+    round: number;
+};
+
+type ActionNG =
+    | { type: "start"; target: NGFields }
+    | { type: "guess"; name: string }
+    | { type: "next-target"; target: NGFields }
+    | { type: "end" };
+
+export function reducerNG(state: SessionStateNG, action: ActionNG): SessionStateNG {
+    switch (action.type) {
+        case "start":
+            return { status: "playing", target: action.target, attempts: [], score: 0, mistakes: 0, round: 1 };
+
+        case "guess": {
+            if (!state.target || state.status !== "playing") return state;
+
+            const attempts = [...state.attempts, action.name];
+            const correct = action.name.trim().toLowerCase() === state.target.name.toLowerCase();
+
+            if (correct) {
+                const gained = scoreForRound(attempts.length);
+                return { ...state, attempts, score: state.score + gained, round: state.round + 1 };
+            }
+
+            const mistakes = Math.min(5, state.mistakes + 1);
+            const status = mistakes >= 5 ? "ended" : "playing";
+            return { ...state, attempts, mistakes, status };
+        }
+
+        case "next-target":
+            return { ...state, target: action.target, attempts: [], mistakes: 0 };
+
+        case "end":
+            return { ...state, status: "ended" };
+
+        default:
+            return state;
+    }
+}

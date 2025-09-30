@@ -16,6 +16,7 @@ import { sb } from "@/lib/supabase";
 import { getGameId, getPersonalBest } from "@/lib/scores";
 import { upsertHighScore } from "@/game/data/highscore";
 
+
 type EndReason = "timeout" | "lost" | null;
 
 export default function SWGame() {
@@ -38,7 +39,7 @@ export default function SWGame() {
     } as SessionState);
 
     const supabase = sb();
-    const [gameId, setGameId] = useState<string | null>(null);
+    const [gameId, setGameId] = useState<number | null>(null);
     const [best, setBest] = useState<number | null>(null);
     const savedRef = useRef(false);
 

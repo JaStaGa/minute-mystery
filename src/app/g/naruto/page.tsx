@@ -38,7 +38,7 @@ export default function NarutoGame() {
     } as SessionState);
 
     const supabase = sb();
-    const [gameId, setGameId] = useState<string | null>(null);
+    const [gameId, setGameId] = useState<number  | null>(null);
     const [best, setBest] = useState<number | null>(null);
     const savedRef = useRef(false);
 

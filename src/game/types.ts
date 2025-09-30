@@ -1,6 +1,6 @@
 // Shared game types and trait order
 
-export type ThemeId = 'harry-potter'
+export type ThemeId = 'harry-potter' | 'star-wars' | 'naruto' | 'new-game';
 
 export type TraitKey = 'role' | 'house' | 'gender' | 'hair' | 'ancestry'
 export const TRAIT_KEYS: readonly TraitKey[] = [
@@ -76,3 +76,16 @@ export type NarutoTraitKey = 'hair' | 'debut' | 'gender' | 'village' | 'role' | 
 export const NARUTO_TRAIT_KEYS: readonly NarutoTraitKey[] =
     ['hair', 'debut', 'gender', 'village', 'role', 'abilities'] as const
 export const NARUTO_MULTI_KEYS = new Set<NarutoTraitKey>(['village', 'role', 'abilities'])
+
+export type NGFields = {
+    name: string
+    image?: string
+    field1: string
+    field2: string
+    field3: string
+    field4: string
+    field5: string
+    field6: string
+}
+
+export type NGCharacter = NGFields
