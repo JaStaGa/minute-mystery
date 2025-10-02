@@ -1,3 +1,4 @@
+// src/app/g/naruto/page.tsx
 "use client";
 import { useEffect, useReducer, useRef, useState } from "react";
 import Image from "next/image";
@@ -45,6 +46,9 @@ export default function NarutoGame() {
     const [endReason, setEndReason] = useState<EndReason>(null);
     const [lastMissed, setLastMissed] = useState<string | null>(null);
 
+    // NEW: brief “Correct” flash state
+    const [flashCorrect, setFlashCorrect] = useState<NarutoFields | null>(null);
+
     useEffect(() => {
         fetchNaruto().then((cs) => {
             setAll(cs);
@@ -89,9 +93,12 @@ export default function NarutoGame() {
         setTyped("");
 
         if (correct && target) {
+            // show 1s “Correct” flash then advance
+            setFlashCorrect(target);
             if (advanceTimeout.current) window.clearTimeout(advanceTimeout.current);
             advanceTimeout.current = window.setTimeout(() => {
                 setSolved((prev) => [...prev, target]);
+                setFlashCorrect(null);
                 const next = pickRandom(all) as unknown as NonNullable<typeof state.target>;
                 dispatch({ type: "next-target", target: next });
             }, 1200);
@@ -357,6 +364,50 @@ export default function NarutoGame() {
                             </div>
                         )}
                     </div>
+
+                    {/* Correct flash overlay */}
+                    {flashCorrect && (
+                        <div
+                            role="status"
+                            aria-live="polite"
+                            className="fixed inset-0 z-[60] grid place-items-center pointer-events-none"
+                        >
+                            <div
+                                className={styles.panel}
+                                style={{
+                                    padding: 16,
+                                    borderRadius: 16,
+                                    width: "min(92vw, 420px)",
+                                    textAlign: "center",
+                                    background: "rgba(0,0,0,.65)",
+                                    backdropFilter: "blur(6px)",
+                                    boxShadow: "0 8px 40px rgba(0,0,0,.5)",
+                                }}
+                            >
+                                <div
+                                    className={styles.nrtTitle}
+                                    style={{
+                                        fontSize: "clamp(1.2rem, 3.4vw, 1.6rem)",
+                                        marginBottom: 10,
+                                        letterSpacing: ".04em",
+                                    }}
+                                >
+                                    {`Correct: ${flashCorrect.name.toUpperCase()}`}
+                                </div>
+
+                                {flashCorrect.image && (
+                                    <Image
+                                        src={flashCorrect.image}
+                                        alt={flashCorrect.name}
+                                        width={128}
+                                        height={128}
+                                        className="mx-auto rounded object-cover"
+                                        unoptimized
+                                    />
+                                )}
+                            </div>
+                        </div>
+                    )}
                 </main>
             </div>
         </RequireUsername>
