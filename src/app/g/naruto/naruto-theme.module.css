@@ -258,7 +258,14 @@
     font-size: .9rem;
     white-space: nowrap;
     box-shadow: 0 1px 0 rgba(0, 0, 0, .35), 0 0 0 1px rgba(255, 255, 255, .02) inset;
-    margin: 0 6px 6px 0;
+    margin: 0;
+}
+
+.pillWrap {
+  white-space: normal;        /* allow line wraps inside the pill */
+  word-break: break-word;     /* break long words if needed */
+  overflow-wrap: anywhere;    /* last-resort wrapping for long tokens */
+  max-width: 100%;            /* don't exceed the column */
 }
 
 .pillGold {
@@ -305,6 +312,8 @@
     -webkit-backdrop-filter: blur(4px);
 }
 
+.glassRow > * { min-width: 0; }
+
 .glassRow:first-of-type {
     border-top: 1px solid rgba(255, 255, 255, .08);
 }
@@ -317,4 +326,11 @@
     font-size: clamp(.95rem, 2.8vw, 1.25rem);
     margin: 6px 0;
     letter-spacing: .04em;
+}
+
+.pillRow {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
 }

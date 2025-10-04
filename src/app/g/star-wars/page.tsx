@@ -16,7 +16,6 @@ import { sb } from "@/lib/supabase";
 import { getGameId, getPersonalBest } from "@/lib/scores";
 import { upsertHighScore } from "@/game/data/highscore";
 
-
 type EndReason = "timeout" | "lost" | null;
 
 export default function SWGame() {
@@ -46,6 +45,10 @@ export default function SWGame() {
     const [endReason, setEndReason] = useState<EndReason>(null);
     const [lastMissed, setLastMissed] = useState<string | null>(null);
 
+    // brief "Correct" overlay
+    const [correctFlash, setCorrectFlash] = useState<{ name: string; image?: string } | null>(null);
+    const correctTimerRef = useRef<number | null>(null);
+
     const swYellow = "#ffe81f";
 
     useEffect(() => {
@@ -72,6 +75,7 @@ export default function SWGame() {
         setTimerKey((k) => k + 1);
         setEndReason(null);
         setLastMissed(null);
+        setCorrectFlash(null);
         const pick = pickRandom(all as SWFields[]) as unknown as NonNullable<typeof state.target>;
         dispatch({ type: "start", target: pick });
     }
@@ -92,12 +96,18 @@ export default function SWGame() {
         setTyped("");
 
         if (correct && target) {
+            // show brief "Correct" flash, then advance
             if (advanceTimeout.current) window.clearTimeout(advanceTimeout.current);
-            advanceTimeout.current = window.setTimeout(() => {
+            if (correctTimerRef.current) window.clearTimeout(correctTimerRef.current);
+
+            setCorrectFlash({ name: target.name, image: target.image || "" });
+
+            correctTimerRef.current = window.setTimeout(() => {
+                setCorrectFlash(null);
                 setSolved((prev) => [...prev, target]);
                 const next = pickRandom(all as SWFields[]) as unknown as NonNullable<typeof state.target>;
                 dispatch({ type: "next-target", target: next });
-            }, 1200);
+            }, 900);
         } else if (!correct && target) {
             setLastMissed(target.name);
         }
@@ -106,6 +116,7 @@ export default function SWGame() {
     useEffect(() => {
         return () => {
             if (advanceTimeout.current) window.clearTimeout(advanceTimeout.current);
+            if (correctTimerRef.current) window.clearTimeout(correctTimerRef.current);
         };
     }, []);
 
@@ -129,10 +140,8 @@ export default function SWGame() {
 
         (async () => {
             try {
-                await upsertHighScore(supabase, "star-wars", state.score); // save
-                // optimistic PB so the dialog shows the new best immediately
+                await upsertHighScore(supabase, "star-wars", state.score);
                 setBest((prev) => Math.max(prev ?? 0, state.score));
-                // confirm from DB (in case fallback path or RPC updated)
                 if (gameId) {
                     const pb = await getPersonalBest(supabase, gameId);
                     if (pb !== null) setBest(pb);
@@ -168,7 +177,6 @@ export default function SWGame() {
                     if (c === "u") return <span key={i} className={styles.fallbackU}>{ch}</span>;
                     if (c === "o") return <span key={i} className={styles.fallbackO}>{ch}</span>;
                     if (c === "v") return <span key={i} className={styles.fallbackV}>{ch}</span>;
-
                     return <span key={i}>{ch}</span>;
                 })}
             </>
@@ -183,7 +191,9 @@ export default function SWGame() {
                         {state.status === "idle" && (
                             <div className="h-full grid place-content-center content-center gap-6 overflow-hidden text-center">
                                 <div className={styles.panel}>
-                                    <h1 className={styles.swTitle}>STAR WARS G<span className={styles.fallbackU}>U</span>ESS<span className={styles.fallbackI}>I</span>NG GAME</h1>
+                                    <h1 className={styles.swTitle}>
+                                        STAR WARS G<span className={styles.fallbackU}>U</span>ESS<span className={styles.fallbackI}>I</span>NG GAME
+                                    </h1>
                                     <div className="mt-3 flex flex-col items-center gap-3">
                                         <button className={styles.swButton} onClick={start}>Start</button>
                                         <Link href="/g/star-wars/leaderboard" className={styles.swButton}>
@@ -196,7 +206,9 @@ export default function SWGame() {
 
                         {state.status === "playing" && state.target && (
                             <div className="space-y-4">
-                                <h1 className={styles.swTitle}>STAR WARS G<span className={styles.fallbackU}>U</span>ESS<span className={styles.fallbackI}>I</span>NG GAME</h1>
+                                <h1 className={styles.swTitle}>
+                                    STAR WARS G<span className={styles.fallbackU}>U</span>ESS<span className={styles.fallbackI}>I</span>NG GAME
+                                </h1>
 
                                 <div className={styles.statsRow}>
                                     <div className={styles.stat}>
@@ -208,13 +220,11 @@ export default function SWGame() {
                                     <div className={styles.stat}>
                                         <span className={styles.statLabel}>Mistakes</span> {state.mistakes}/5
                                     </div>
-
                                     {state.status !== "playing" && best !== null && (
                                         <div className={styles.stat}>
                                             <span className={styles.statLabel}>Personal Best</span> {best}
                                         </div>
                                     )}
-
                                     <div className={styles.stat}>
                                         <span className={styles.statLabel}>Time</span>
                                         <Countdown
@@ -309,7 +319,7 @@ export default function SWGame() {
 
                                 {solved.length > 0 && (
                                     <div className="space-y-2 text-center">
-                                        <h2 className="text-lg font-semibold">Correct this session</h2>
+                                        <h2 className={styles.swSectionTitle}>Correct this session</h2>
                                         <ul className="space-y-2 max-w-2xl mx-auto">
                                             {solved.map((c, i) => (
                                                 <li key={`${c.name}-${i}`} className={`flex items-center gap-3 ${styles.guessCard} rounded p-2`}>
@@ -328,6 +338,37 @@ export default function SWGame() {
                                                 </li>
                                             ))}
                                         </ul>
+                                    </div>
+                                )}
+
+                                {/* Correct overlay */}
+                                {correctFlash && (
+                                    <div
+                                        aria-live="polite"
+                                        style={{
+                                            position: "fixed",
+                                            inset: 0,
+                                            display: "grid",
+                                            placeItems: "center",
+                                            zIndex: 50,
+                                            pointerEvents: "none",
+                                            background: "linear-gradient(to bottom, rgba(0,0,0,.6), rgba(0,0,0,.35))",
+                                        }}
+                                    >
+                                        <div className={styles.panel} style={{ textAlign: "center" }}>
+                                            <h3 className={styles.swTitle} style={{ marginBottom: 8 }}>
+                                                <SafeLetters text="CORRECT" />
+                                            </h3>                                            <div style={{ fontWeight: 800, marginBottom: 8 }}>{correctFlash.name}</div>
+                                            {correctFlash.image ? (
+                                                <img
+                                                    src={correctFlash.image}
+                                                    alt={correctFlash.name}
+                                                    width={96}
+                                                    height={96}
+                                                    style={{ borderRadius: 12, objectFit: "cover", display: "inline-block" }}
+                                                />
+                                            ) : null}
+                                        </div>
                                     </div>
                                 )}
                             </div>

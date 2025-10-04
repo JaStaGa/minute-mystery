@@ -225,7 +225,7 @@ export default function GuessLogNaruto({ target, characters, attempts }: Props) 
                     <div style={{ textAlign: "center" }}>
                         {r.grouped.length ? (
                             r.grouped.map((g, j) => (
-                                <span key={j} className={styles.pill} style={{ ...pillBase, ...toneStyle(g.tone) }}>
+                                <span key={j} className={`${styles.pill} ${styles.pillWrap}`} style={{ ...pillBase, ...toneStyle(g.tone) }}>
                                     {g.text}
                                 </span>
                             ))

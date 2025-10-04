@@ -2,76 +2,147 @@
 
 import type { SWFields, SWTraitKey } from '@/game/types'
 import { SW_TRAIT_KEYS, SW_MULTI_KEYS } from '@/game/types'
-import { getNewSharedTraitsSW } from '@/game/engine/traits'
 import styles from '@/app/g/star-wars/sw-theme.module.css'
 
 type Props = { target: SWFields; characters: SWFields[]; attempts: string[] }
 
 const canon = (s: string) => s.trim().toLowerCase()
-const tokens = (s: string) => s.split(',').map(t => canon(t)).filter(Boolean)
+const split = (s: string) =>
+    s.split(',').map(t => canon(t)).filter(Boolean)
 
-function classifyMatch(k: SWTraitKey, guessV: string, targetV: string): 'exact' | 'partial' | 'none' {
+function fieldMatchKind(k: SWTraitKey, guessV: string, targetV: string):
+    | 'none'
+    | 'partial'
+    | 'exact' {
     if (!guessV || !targetV) return 'none'
-    if (!SW_MULTI_KEYS.has(k)) return canon(guessV) === canon(targetV) ? 'exact' : 'none'
-
-    const gT = tokens(guessV)
-    const tT = tokens(targetV)
-    const inter = gT.filter(t => tT.includes(t))
+    if (!SW_MULTI_KEYS.has(k)) {
+        return canon(guessV) === canon(targetV) ? 'exact' : 'none'
+    }
+    const g = split(guessV)
+    const t = split(targetV)
+    const inter = g.filter(x => t.includes(x))
     if (inter.length === 0) return 'none'
-    const exact = inter.length === gT.length && gT.length === tT.length
+    const exact = inter.length === g.length && g.length === t.length
     return exact ? 'exact' : 'partial'
 }
 
-export default function GuessLogSW({ target, characters, attempts }: Props) {
-    const yellow = '#ffe81f'
-
-    // Hints: cumulative newly discovered exact tokens, per your engine helper
-    const roundGuesses = attempts.map((text, i) => ({ text, ts: i }))
-    const hints: string[] = []
-    const seen = new Set<string>()
-    for (let i = 0; i < roundGuesses.length; i++) {
-        getNewSharedTraitsSW(
-            { targetId: target.name, guesses: roundGuesses.slice(0, i + 1) },
-            characters
-        ).forEach(t => { if (!seen.has(t)) { seen.add(t); hints.push(t) } })
+/** Return the exact tokens (by key) that the guess shares with the target. */
+function overlappingTokensByKey(
+    k: SWTraitKey,
+    guessV: string,
+    targetV: string
+): string[] {
+    if (!SW_MULTI_KEYS.has(k)) {
+        return canon(guessV) && canon(guessV) === canon(targetV) ? [guessV.trim()] : []
     }
+    const g = split(guessV)
+    const t = split(targetV)
+    return g.filter(x => t.includes(x))
+}
 
+export default function GuessLogSW({ target, characters, attempts }: Props) {
+    // ---- Build cumulative HINTS (only overlapping values; no leaks) ----
+    const hintsTokens = new Set<string>() // e.g. "role:kage"
+    const hintsLabelOrder: string[] = []   // stable order for render
+
+    attempts.forEach(name => {
+        const g = characters.find(c => canon(c.name) === canon(name))
+        if (!g) return
+
+        SW_TRAIT_KEYS.forEach(k => {
+            const gv = String(g[k] ?? '')
+            const tv = String(target[k] ?? '')
+            if (!gv || !tv) return
+            overlappingTokensByKey(k, gv, tv).forEach(tokRaw => {
+                const tok = tokRaw.trim()
+                const id = `${k}:${canon(tok)}`
+                if (!hintsTokens.has(id)) {
+                    hintsTokens.add(id)
+                    hintsLabelOrder.push(`${k}: ${tok}`)
+                }
+            })
+        })
+    })
+
+    // ---- Prepare newest row display (group values per key) ----
     const ordered = [...attempts].reverse()
     const newestName = ordered[0]
     const newest = characters.find(c => canon(c.name) === canon(newestName ?? ''))
 
     return (
         <div style={{ marginTop: 8 }}>
-            {/* Hints */}
+            {/* Hints so far */}
             <div style={{ marginBottom: 8, textAlign: 'center' }}>
-                {hints.length
-                    ? hints.map((h, i) => (
-                        <span key={i} className={styles.pillExact} style={{ marginRight: 6, marginBottom: 4 }}>
-                            {h}
+                {hintsLabelOrder.length ? (
+                    hintsLabelOrder.map((label, i) => (
+                        <span
+                            key={i}
+                            className={styles.pillExact}
+                            style={{ marginRight: 6, marginBottom: 4 }}
+                        >
+                            {label}
                         </span>
                     ))
-                    : <span className={styles.pillMuted}>No hints yet</span>}
+                ) : (
+                    <span className={styles.pillMuted}>No hints yet</span>
+                )}
             </div>
 
+            {/* Header */}
             <div
                 style={{
                     display: 'grid',
                     gridTemplateColumns: '1fr 1fr',
                     textAlign: 'center',
                     fontWeight: 800,
-                    color: yellow,
+                    color: '#ffe81f',
                     fontSize: 'clamp(0.95rem, 2.8vw, 1.25rem)',
                     marginBottom: 6,
                 }}
             >
                 <div>Guesses</div>
-                <div>Attributes</div>
+                <div>Traits</div>
             </div>
 
+            {/* Rows */}
             {ordered.map((name, idx) => {
                 const isNewest = idx === 0
                 const guess = characters.find(c => canon(c.name) === canon(name))
                 const isCorrect = !!guess && guess.name === target.name
+
+                // For newest row, group trait values into a single pill per key.
+                let newestPills: React.ReactNode = <span className={styles.pillMuted}>—</span>
+                if (isNewest && newest) {
+                    newestPills = (
+                        <>
+                            {SW_TRAIT_KEYS.map(k => {
+                                const gv = String(newest[k] ?? '')
+                                if (!gv) return null
+                                const tv = String(target[k] ?? '')
+                                const kind = fieldMatchKind(k, gv, tv)
+
+                                // Build label. If multi, keep original (pretty) tokens order.
+                                const valueLabel = gv.trim()
+                                const cls =
+                                    kind === 'exact'
+                                        ? styles.pillExact
+                                        : kind === 'partial'
+                                            ? styles.pillPartial
+                                            : styles.pill
+
+                                return (
+                                    <span
+                                        key={k}
+                                        className={cls}
+                                        style={{ marginRight: 6, marginBottom: 4 }}
+                                    >
+                                        {k}: {valueLabel}
+                                    </span>
+                                )
+                            })}
+                        </>
+                    )
+                }
 
                 return (
                     <div
@@ -96,27 +167,7 @@ export default function GuessLogSW({ target, characters, attempts }: Props) {
                             </span>
                         </div>
 
-                        <div style={{ textAlign: 'center' }}>
-                            {isNewest && newest ? (
-                                SW_TRAIT_KEYS.map(k => {
-                                    const v = String(newest[k] ?? '')
-                                    if (!v) return null
-                                    const tV = String(target[k] ?? '')
-                                    const kind = classifyMatch(k, v, tV)
-                                    const cls =
-                                        kind === 'exact' ? styles.pillExact
-                                            : kind === 'partial' ? styles.pillPartial
-                                                : styles.pill
-                                    return (
-                                        <span key={k} className={cls} style={{ marginRight: 6, marginBottom: 4 }}>
-                                            {k}: {v}
-                                        </span>
-                                    )
-                                })
-                            ) : (
-                                <span className={styles.pillMuted}>—</span>
-                            )}
-                        </div>
+                        <div style={{ textAlign: 'center' }}>{newestPills}</div>
                     </div>
                 )
             })}
