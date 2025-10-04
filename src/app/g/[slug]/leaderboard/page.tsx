@@ -382,111 +382,113 @@ export default function Leaderboard({
         const border = "#233127";
         return (
             <div className={nrtStyles.nrtRoot}>
-                <main className="min-h-dvh p-4 text-zinc-100">
-                    <div className="max-w-4xl mx-auto">
-                        <div className="flex items-start justify-between gap-4 mb-4">
-                            <h1 className={nrtStyles.nrtTitle} style={{ fontSize: "clamp(1.8rem,5vw,2.6rem)" }}>
-                                {title}
-                            </h1>
-                            <Link href="/g/naruto" className={nrtStyles.nrtButton}>
-                                Back to game
-                            </Link>
-                        </div>
+                <div style={{ position: "relative", zIndex: 1 }}>
+                    <main className="min-h-dvh p-4 text-zinc-100">
+                        <div className="max-w-4xl mx-auto">
+                            <div className="flex items-start justify-between gap-4 mb-4">
+                                <h1 className={nrtStyles.nrtTitle} style={{ fontSize: "clamp(1.8rem,5vw,2.6rem)" }}>
+                                    {title}
+                                </h1>
+                                <Link href="/g/naruto" className={nrtStyles.nrtButton}>
+                                    Back to game
+                                </Link>
+                            </div>
 
-                        <div className={nrtStyles.panel}>
-                            <div style={{ overflowX: "auto" }}>
-                                <table style={{ width: "100%", borderCollapse: "separate", borderSpacing: 0, color: "var(--nrt-ink)" }}>
-                                    <thead>
-                                        <tr
-                                            style={{
-                                                background: "#0f1a14",
-                                                color: "var(--nrt-accent)",
-                                                textAlign: "left",
-                                                fontWeight: 800,
-                                                letterSpacing: "0.04em",
-                                            }}
-                                        >
-                                            {["Rank", "Player", "Score", "Date"].map((h, i) => (
-                                                <th
-                                                    key={h}
-                                                    style={{
-                                                        padding: "10px 12px",
-                                                        borderTopLeftRadius: i === 0 ? 10 : 0,
-                                                        borderTopRightRadius: i === 3 ? 10 : 0,
-                                                        borderBottom: `1px solid ${border}`,
-                                                    }}
-                                                >
-                                                    {h}
-                                                </th>
-                                            ))}
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {loading ? (
-                                            <tr>
-                                                <td colSpan={4} style={{ padding: "12px", textAlign: "center", opacity: 0.7 }}>
-                                                    Loading…
-                                                </td>
+                            <div className={nrtStyles.panel}>
+                                <div style={{ overflowX: "auto" }}>
+                                    <table style={{ width: "100%", borderCollapse: "separate", borderSpacing: 0, color: "var(--nrt-ink)" }}>
+                                        <thead>
+                                            <tr
+                                                style={{
+                                                    background: "#0f1a14",
+                                                    color: "var(--nrt-accent)",
+                                                    textAlign: "left",
+                                                    fontWeight: 800,
+                                                    letterSpacing: "0.04em",
+                                                }}
+                                            >
+                                                {["Rank", "Player", "Score", "Date"].map((h, i) => (
+                                                    <th
+                                                        key={h}
+                                                        style={{
+                                                            padding: "10px 12px",
+                                                            borderTopLeftRadius: i === 0 ? 10 : 0,
+                                                            borderTopRightRadius: i === 3 ? 10 : 0,
+                                                            borderBottom: `1px solid ${border}`,
+                                                        }}
+                                                    >
+                                                        {h}
+                                                    </th>
+                                                ))}
                                             </tr>
-                                        ) : rows.length === 0 ? (
-                                            <tr>
-                                                <td colSpan={4} style={{ padding: "12px", textAlign: "center", opacity: 0.7 }}>
-                                                    No scores yet
-                                                </td>
-                                            </tr>
-                                        ) : (
-                                            rows.map((r, i) => (
-                                                <tr key={`${r.user_id}-${r.updated_at}`} style={{ background: i % 2 ? "#0f1a14" : "#0b1410" }}>
-                                                    <td style={{ padding: "10px 12px", borderBottom: `1px solid ${border}` }}>{i + 1}</td>
-                                                    <td style={{ padding: "10px 12px", borderBottom: `1px solid ${border}` }}>
-                                                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                                                            <div
-                                                                style={{
-                                                                    width: 24,
-                                                                    height: 24,
-                                                                    borderRadius: 9999,
-                                                                    overflow: "hidden",
-                                                                    border: `1px solid ${border}`,
-                                                                    background: "#0e1914",
-                                                                }}
-                                                                title={r.username ?? r.user_id.slice(0, 8)}
-                                                            >
-                                                                {r.icon_url ? (
-                                                                    // eslint-disable-next-line @next/next/no-img-element
-                                                                    <img src={r.icon_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                                                                ) : (
-                                                                    <div
-                                                                        style={{
-                                                                            width: "100%",
-                                                                            height: "100%",
-                                                                            display: "grid",
-                                                                            placeItems: "center",
-                                                                            fontSize: 10,
-                                                                            opacity: 0.8,
-                                                                        }}
-                                                                    >
-                                                                        {(r.username ?? r.user_id).slice(0, 2).toUpperCase()}
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                            <span>{r.username ?? r.user_id.slice(0, 8)}</span>
-                                                        </div>
-                                                    </td>
-                                                    <td style={{ padding: "10px 12px", borderBottom: `1px solid ${border}`, fontWeight: 800 }}>
-                                                        {r.score}
-                                                    </td>
-                                                    <td style={{ padding: "10px 12px", borderBottom: `1px solid ${border}` }}>
-                                                        {r.updated_at ? new Date(r.updated_at).toLocaleDateString() : ""}
+                                        </thead>
+                                        <tbody>
+                                            {loading ? (
+                                                <tr>
+                                                    <td colSpan={4} style={{ padding: "12px", textAlign: "center", opacity: 0.7 }}>
+                                                        Loading…
                                                     </td>
                                                 </tr>
-                                            ))
-                                        )}
-                                    </tbody>
-                                </table>
+                                            ) : rows.length === 0 ? (
+                                                <tr>
+                                                    <td colSpan={4} style={{ padding: "12px", textAlign: "center", opacity: 0.7 }}>
+                                                        No scores yet
+                                                    </td>
+                                                </tr>
+                                            ) : (
+                                                rows.map((r, i) => (
+                                                    <tr key={`${r.user_id}-${r.updated_at}`} style={{ background: i % 2 ? "#0f1a14" : "#0b1410" }}>
+                                                        <td style={{ padding: "10px 12px", borderBottom: `1px solid ${border}` }}>{i + 1}</td>
+                                                        <td style={{ padding: "10px 12px", borderBottom: `1px solid ${border}` }}>
+                                                            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                                                <div
+                                                                    style={{
+                                                                        width: 24,
+                                                                        height: 24,
+                                                                        borderRadius: 9999,
+                                                                        overflow: "hidden",
+                                                                        border: `1px solid ${border}`,
+                                                                        background: "#0e1914",
+                                                                    }}
+                                                                    title={r.username ?? r.user_id.slice(0, 8)}
+                                                                >
+                                                                    {r.icon_url ? (
+                                                                        // eslint-disable-next-line @next/next/no-img-element
+                                                                        <img src={r.icon_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                                                                    ) : (
+                                                                        <div
+                                                                            style={{
+                                                                                width: "100%",
+                                                                                height: "100%",
+                                                                                display: "grid",
+                                                                                placeItems: "center",
+                                                                                fontSize: 10,
+                                                                                opacity: 0.8,
+                                                                            }}
+                                                                        >
+                                                                            {(r.username ?? r.user_id).slice(0, 2).toUpperCase()}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                                <span>{r.username ?? r.user_id.slice(0, 8)}</span>
+                                                            </div>
+                                                        </td>
+                                                        <td style={{ padding: "10px 12px", borderBottom: `1px solid ${border}`, fontWeight: 800 }}>
+                                                            {r.score}
+                                                        </td>
+                                                        <td style={{ padding: "10px 12px", borderBottom: `1px solid ${border}` }}>
+                                                            {r.updated_at ? new Date(r.updated_at).toLocaleDateString() : ""}
+                                                        </td>
+                                                    </tr>
+                                                ))
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </main>
+                    </main>
+                </div>
             </div>
         );
     }

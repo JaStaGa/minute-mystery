@@ -159,7 +159,7 @@ export default function HPGame() {
                         {state.status === "idle" && (
                             <div className="h-full grid place-content-center content-center gap-6 text-center">
                                 <div className={styles.panel}>
-                                    <h1 className={styles.hpTitle}>HARRY POTTER GUESSING GAME</h1>
+                                    <h1 className={styles.hpBigTitle}>HARRY POTTER GUESSING GAME</h1>
                                     <div className="mt-3 flex flex-col items-center gap-3">
                                         <button className={styles.hpButton} onClick={start}>Start</button>
                                         <Link href="/g/harry-potter/leaderboard" className={styles.hpButton}>Leaderboard</Link>

@@ -272,6 +272,7 @@
 }
 
 /* additions */
+
 .hpTitle {
     font-family: "Harry P Font", serif;
     text-align: center;
@@ -280,11 +281,20 @@
     letter-spacing: 0.5px;
 }
 
+.hpBigTitle {
+    font-family: "Harry P Font", serif;
+    text-align: center;
+    font-size: clamp(2rem, 2rem + 4vw, 4rem);
+    font-weight: 700;
+    color: #4b2e2e;
+    letter-spacing: 0.5px;
+}
+
 .hpButton {
     padding: 12px 24px;
     font-size: 100%;
     font-family: "Marauders Map", serif;
-    background-color: #8b5e3c;
+    background-color: #4b2e2e;
     color: #fff;
     border: none;
     border-radius: 8px;
@@ -297,7 +307,7 @@
     padding: 0px 8px;
     font-size: 0.95rem;
     font-family: "Marauders Map", serif;
-    background-color: #8b5e3c;
+    background-color: #4b2e2e;
     color: #fff;
     border: none;
     border-radius: 8px;
@@ -327,15 +337,15 @@
 }
 
 .stat {
-    background-color: #d3ba93;
+    background-color: #8b5e3c;
     border: 1px solid #a47148;
-    border-radius: 10px;
+    border-radius: 80px;
     padding: 4px 8px;
     /* ↓ tighter */
     min-width: 76px;
     /* target size */
     text-align: center;
-    color: #4b2e2e;
+    color: #fff;
     font-family: "Marauders Map", serif;
     font-size: 0.9rem;
     /* ↓ smaller font */
