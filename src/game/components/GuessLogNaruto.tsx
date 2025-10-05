@@ -1,3 +1,4 @@
+// src/game/components/GuessLogNaruto.tsx
 "use client";
 
 import type { NarutoFields } from "@/game/types";

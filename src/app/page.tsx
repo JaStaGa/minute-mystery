@@ -63,7 +63,7 @@ export default function Home() {
         <section className="rounded-2xl border border-zinc-800 bg-zinc-900/40">
           <details ref={detRef} className="group">
             <summary className="flex items-center justify-between cursor-pointer list-none px-5 py-4 text-2xl font-bold select-none">
-              <span>What is this place?</span>
+              <span>What is this game?</span>
               <svg aria-hidden viewBox="0 0 20 20" className="h-5 w-5 text-zinc-400 transition-transform duration-200 group-open:rotate-180">
                 <path d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 10.94l3.71-3.71a.75.75 0 1 1 1.06 1.06l-4.24 4.24a.75.75 0 0 1-1.06 0L5.21 8.29a.75.75 0 0 1 .02-1.08z" fill="currentColor" />
               </svg>
@@ -102,7 +102,7 @@ export default function Home() {
                 Points depend on attempts taken to land the correct name in that round:
               </p>
               <ul className="mt-2 grid grid-cols-1 gap-1 sm:grid-cols-2 pl-6 list-disc">
-                <li>Correct on your 1st guess: <span className="font-semibold">5 points</span></li>
+                <li>1st guess: <span className="font-semibold">5 points</span></li>
                 <li>2nd guess: <span className="font-semibold">4 points</span></li>
                 <li>3rd guess: <span className="font-semibold">3 points</span></li>
                 <li>4th guess: <span className="font-semibold">2 points</span></li>

@@ -1,3 +1,4 @@
+// src/app/g/star-wars/page.tsx
 "use client";
 import { useEffect, useReducer, useRef, useState } from "react";
 import Image from "next/image";

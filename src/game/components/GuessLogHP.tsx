@@ -1,3 +1,4 @@
+// src/game/components/GuessLogHP.tsx
 'use client'
 
 import styles from '@/app/g/harry-potter/hp-theme.module.css'

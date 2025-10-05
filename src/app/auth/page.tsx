@@ -83,12 +83,6 @@ export default function AuthPage() {
                         </CardTitle>
                         <div className="flex gap-2">
                             <Button
-                                variant={mode === "sign_in" ? "default" : "outline"}
-                                onClick={() => setMode("sign_in")}
-                            >
-                                Log in
-                            </Button>
-                            <Button
                                 variant={mode === "sign_up" ? "default" : "outline"}
                                 onClick={() => setMode("sign_up")}
                             >

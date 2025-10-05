@@ -1,3 +1,4 @@
+// src/app/g/[slug]/leaderboard/page.tsx
 "use client";
 import { useEffect, useState, type CSSProperties } from "react";
 import Link from "next/link";

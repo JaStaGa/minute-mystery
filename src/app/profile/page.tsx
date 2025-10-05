@@ -1,3 +1,4 @@
+// src/app/profile/page.tsx
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
@@ -89,15 +90,38 @@ export default function ProfilePage() {
         if (!userId) return;
         setSaving(true);
         setErr(null);
-        const { error } = await supabase.from("profiles").upsert(
-            { id: userId, username: username.trim() || null, icon_url: iconUrl ?? null },
-            { onConflict: "id" },
-        );
+
+        // optional pre-check to avoid throwing the DB error
+        const want = username.trim() || null;
+        if (want) {
+            const { data: taken } = await supabase
+                .from("profiles")
+                .select("id")
+                .eq("username", want)
+                .neq("id", userId)
+                .maybeSingle();
+            if (taken) {
+                setSaving(false);
+                setErr("Username already taken. Please choose another.");
+                return;
+            }
+        }
+
+        const { error } = await supabase
+            .from("profiles")
+            .upsert({ id: userId, username: want, icon_url: iconUrl ?? null }, { onConflict: "id" });
+
         setSaving(false);
+
         if (error) {
-            setErr(error.message);
+            const friendly =
+                error.code === "23505" || /profiles_username_key/i.test(error.message || "")
+                    ? "Username already taken. Please choose another."
+                    : error.message;
+            setErr(friendly);
             return;
         }
+
         window.dispatchEvent(new CustomEvent("mm-profile-updated"));
     }
 
