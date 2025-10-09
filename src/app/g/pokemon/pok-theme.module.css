@@ -1,0 +1,281 @@
+/* src/app/g/pokemon/pok-theme.module.css */
+@font-face {
+    font-family: "Pok Title";
+    src: url("/fonts/pok/Pokemon Solid.ttf") format("truetype");
+    font-display: swap;
+}
+
+/* Tokens */
+.pokRoot {
+    --pok-ink: #eef2ff;
+    --pok-bg: #0b0d16;
+    --pok-accent: #ffd24a;
+    /* Poké yellow */
+    --pok-accent-2: #4ea4ff;
+    /* Poké blue */
+    min-height: 100svh;
+    position: relative;
+    background: var(--pok-bg);
+    overflow-x: clip;
+}
+
+/* Background */
+.pokRoot::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    background:
+        radial-gradient(1200px 600px at 50% -10%, rgba(255, 210, 74, .12), rgba(0, 0, 0, 0)),
+        url("/images/pok/bg-16x9.png") center/cover no-repeat;
+}
+
+:global(.game-screen) {
+    position: relative;
+    z-index: 10;
+}
+
+/* Type & UI */
+.pokTitle {
+    text-align: center;
+    color: var(--pok-ink);
+    letter-spacing: .06em;
+    font-weight: 900;
+    font-size: clamp(1.6rem, 5vw, 2.4rem);
+    font-family: "Pok Title", system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+    text-shadow: 0 2px 0 rgba(0, 0, 0, .35), 0 0 20px rgba(255, 210, 74, .15);
+}
+
+.panel {
+    background: rgba(10, 12, 18, .78);
+    border: 1px solid rgba(255, 255, 255, .08);
+    border-radius: 14px;
+    padding: 16px;
+    box-shadow: 0 1px 0 rgba(0, 0, 0, .35);
+}
+
+.pokButton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, .10);
+    background: linear-gradient(180deg, #ffd24a, #ffbf26);
+    color: #111;
+    font-weight: 800;
+    text-decoration: none;
+    transition: transform .06s ease, filter .12s ease, box-shadow .12s ease;
+    box-shadow: 0 1px 0 rgba(0, 0, 0, .35), 0 0 0 1px rgba(255, 210, 74, .35) inset;
+}
+
+.pokButton:hover {
+    filter: brightness(1.05);
+}
+
+.pokButton:active {
+    transform: translateY(1px);
+}
+
+.pokButton:focus-visible {
+    outline: 2px solid var(--pok-accent-2);
+    outline-offset: 2px;
+}
+
+.statsRow {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.stat {
+    background: rgba(12, 16, 24, .8);
+    border: 1px solid rgba(255, 255, 255, .10);
+    border-radius: 10px;
+    padding: 8px 12px;
+    color: var(--pok-ink);
+    line-height: 1.2;
+}
+
+.statLabel {
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    opacity: .85;
+    font-size: .75rem;
+    margin-right: 6px;
+}
+
+.pokInput {
+    width: 100%;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, .10);
+    background: #0e1322;
+    color: var(--pok-ink);
+    padding: 10px 12px;
+    outline: none;
+    box-shadow: 0 1px 0 rgba(0, 0, 0, .35);
+}
+
+.pokInput:focus-visible {
+    box-shadow: 0 0 0 2px rgba(78, 164, 255, .35);
+    border-color: #2a6fd1;
+}
+
+.clearBtn {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+    padding: 4px;
+    z-index: 20;
+    color: var(--pok-accent-2);
+    font-weight: 800;
+    text-shadow: 0 0 6px rgba(78, 164, 255, .6);
+}
+
+.clearBtn:focus-visible {
+    outline: 2px solid var(--pok-accent-2);
+    outline-offset: 2px;
+    border-radius: 6px;
+}
+
+.formColumn {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 8px;
+}
+
+@media (max-width:520px) {
+    .formColumn {
+        grid-template-columns: 1fr;
+    }
+}
+
+.timeTrack {
+    width: 100%;
+    height: 8px;
+    background: #0e1322;
+    border: 1px solid rgba(255, 255, 255, .10);
+    border-radius: 9999px;
+    overflow: hidden;
+}
+
+.timeFill {
+    height: 100%;
+    background: var(--pok-accent);
+    transition: width .2s linear;
+}
+
+.tableWrap {
+    margin-top: 8px;
+}
+
+.guessCard {
+    border: 1px solid rgba(255, 255, 255, .10);
+    background: rgba(12, 16, 24, .72);
+    border-radius: 12px;
+}
+
+.endBlock {
+    margin-top: 12px;
+}
+
+.missedHdr {
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    font-weight: 700;
+    text-align: center;
+    color: var(--pok-accent);
+}
+
+/* Pills */
+.pill {
+    display: inline-block;
+    padding: 6px 10px;
+    border-radius: 9999px;
+    border: 1px solid rgba(255, 255, 255, .12);
+    background: #0e1322;
+    color: var(--pok-ink);
+    font-weight: 800;
+    font-size: .9rem;
+    white-space: nowrap;
+    box-shadow: 0 1px 0 rgba(0, 0, 0, .35), 0 0 0 1px rgba(255, 255, 255, .02) inset;
+    margin: 0;
+}
+
+.pillWrap {
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    max-width: 100%;
+}
+
+.pillMuted {
+    display: inline-block;
+    padding: 6px 10px;
+    border-radius: 9999px;
+    border: 1px dashed rgba(255, 255, 255, .18);
+    color: #e8ede8;
+    font-size: .85rem;
+    background: rgba(0, 0, 0, .45);
+}
+
+.pillSuccess {
+    background: var(--pok-accent);
+    color: #111;
+    border-color: #ffd36a;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, .35);
+}
+
+/* Glass rows */
+.glassBox {
+    border: 1px solid rgba(255, 255, 255, .14);
+    background: rgba(0, 0, 0, .52);
+    backdrop-filter: blur(6px) saturate(1.06);
+    -webkit-backdrop-filter: blur(6px) saturate(1.06);
+    border-radius: 12px;
+    padding: 10px;
+}
+
+.glassRow {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, .08);
+    background: rgba(0, 0, 0, .38);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+
+.glassRow>* {
+    min-width: 0;
+}
+
+.glassRow:first-of-type {
+    border-top: 1px solid rgba(255, 255, 255, .08);
+}
+
+.glassRowHeader {
+    display: grid;
+    text-align: center;
+    font-weight: 900;
+    color: var(--pok-accent);
+    font-size: clamp(.95rem, 2.8vw, 1.25rem);
+    margin: 6px 0;
+    letter-spacing: .04em;
+}
+
+.pillRow {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+}

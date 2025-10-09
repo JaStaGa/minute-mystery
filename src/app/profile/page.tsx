@@ -1,6 +1,7 @@
 // src/app/profile/page.tsx
 "use client";
-import { useEffect, useMemo, useState } from "react";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { sb } from "@/lib/supabase";
 import { fetchHP } from "@/game/themes/harry-potter/adapter";
@@ -9,6 +10,7 @@ import { fetchNaruto } from "@/game/themes/naruto/adapter";
 import RequireUsername from "@/components/require-username";
 
 type ProfileRow = { id: string; username: string | null; icon_url: string | null };
+type Opt = { name: string; image: string };
 
 export default function ProfilePage() {
     const supabase = sb();
@@ -22,9 +24,9 @@ export default function ProfilePage() {
     const [username, setUsername] = useState("");
     const [iconUrl, setIconUrl] = useState<string | null>(null);
 
-    const [hp, setHp] = useState<{ name: string; image?: string | null }[]>([]);
-    const [sw, setSw] = useState<{ name: string; image?: string | null }[]>([]);
-    const [nrt, setNrt] = useState<{ name: string; image?: string | null }[]>([]);
+    const [hp, setHp] = useState<Opt[]>([]);
+    const [sw, setSw] = useState<Opt[]>([]);
+    const [nrt, setNrt] = useState<Opt[]>([]);
 
     useEffect(() => {
         (async () => {
@@ -51,47 +53,40 @@ export default function ProfilePage() {
 
             try {
                 const hpAll = await fetchHP();
-                setHp(hpAll.map((c) => ({ name: c.name, image: c.image })));
+                setHp(
+                    dedupeByImage(
+                        hpAll.filter(c => c.image).map(c => ({ name: c.name, image: c.image as string }))
+                    )
+                );
             } catch { }
 
             try {
                 const swAll = await fetchSW();
-                setSw(swAll.map((c) => ({ name: c.name, image: c.image })));
+                setSw(
+                    dedupeByImage(
+                        swAll.filter(c => c.image).map(c => ({ name: c.name, image: c.image as string }))
+                    )
+                );
             } catch { }
 
             try {
                 const nrtAll = await fetchNaruto();
-                setNrt(nrtAll.map((c) => ({ name: c.name, image: c.image })));
+                setNrt(
+                    dedupeByImage(
+                        nrtAll.filter(c => c.image).map(c => ({ name: c.name, image: c.image as string }))
+                    )
+                );
             } catch { }
 
             setLoading(false);
         })();
     }, [supabase]);
 
-    const hpOptions = useMemo(() => {
-        const list = hp.filter((c) => c.image).map((c) => ({ name: c.name, image: c.image as string }));
-        const seen = new Set<string>();
-        return list.filter((o) => (seen.has(o.image) ? false : (seen.add(o.image), true)));
-    }, [hp]);
-
-    const swOptions = useMemo(() => {
-        const list = sw.filter((c) => c.image).map((c) => ({ name: c.name, image: c.image as string }));
-        const seen = new Set<string>();
-        return list.filter((o) => (seen.has(o.image) ? false : (seen.add(o.image), true)));
-    }, [sw]);
-
-    const nrtOptions = useMemo(() => {
-        const list = nrt.filter((c) => c.image).map((c) => ({ name: c.name, image: c.image as string }));
-        const seen = new Set<string>();
-        return list.filter((o) => (seen.has(o.image) ? false : (seen.add(o.image), true)));
-    }, [nrt]);
-
     async function save() {
         if (!userId) return;
         setSaving(true);
         setErr(null);
 
-        // optional pre-check to avoid throwing the DB error
         const want = username.trim() || null;
         if (want) {
             const { data: taken } = await supabase
@@ -129,183 +124,174 @@ export default function ProfilePage() {
         try {
             await supabase.auth.signOut();
         } finally {
-            window.location.href = "/"; // don't use router.push here
+            window.location.href = "/";
         }
     }
 
     return (
         <RequireUsername>
-            <main className="min-h-dvh p-6 text-zinc-100">
-                <div className="max-w-4xl mx-auto space-y-6">
-                    <div className="flex items-center justify-between">
-                        <h1 className="text-3xl font-semibold">Profile</h1>
-                        <div className="flex gap-2">
-                            <Link href="/" className="px-3 py-2 rounded bg-white text-black">Back</Link>
-                            <button onClick={signOut} className="px-3 py-2 rounded border border-zinc-700 text-zinc-200">
-                                Sign out
+            <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                    <h1 className="text-3xl font-semibold">Profile</h1>
+                    <div className="flex gap-2">
+                        <Link href="/" className="btn">Back</Link>
+                        <button onClick={signOut} className="btn-outline">Sign out</button>
+                    </div>
+                </div>
+
+                {err && <p className="text-[var(--danger)]">{err}</p>}
+
+                {loading ? (
+                    <div className="panel">Loading…</div>
+                ) : (
+                    <div className="panel space-y-5">
+                        {/* Top row */}
+                        <div className="flex items-center gap-4">
+                            <div className="grid h-16 w-16 place-items-center overflow-hidden rounded-full border border-[var(--border)] bg-[var(--surface)]">
+                                {iconUrl ? (
+                                    // eslint-disable-next-line @next/next/no-img-element
+                                    <img
+                                        src={iconUrl}
+                                        alt="icon"
+                                        width={64}
+                                        height={64}
+                                        className="h-full w-full object-cover"
+                                    />
+                                ) : (
+                                    <span className="text-lg font-bold">
+                                        {username?.slice(0, 2) || "?"}
+                                    </span>
+                                )}
+                            </div>
+
+                            <div className="flex-1">
+                                <label className="label" htmlFor="email">Email</label>
+                                <input
+                                    id="email"
+                                    value={email}
+                                    readOnly
+                                    disabled
+                                    className="input cursor-not-allowed"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Username */}
+                        <div className="card space-y-2">
+                            <label htmlFor="username" className="label">Edit Username</label>
+                            <input
+                                id="username"
+                                value={username}
+                                onChange={(e) => setUsername(e.target.value)}
+                                className="input"
+                                placeholder="Enter a username"
+                            />
+                        </div>
+
+                        {/* Avatar pickers */}
+                        <div className="space-y-3">
+                            <Picker
+                                title="Harry Potter"
+                                options={hp}
+                                selected={iconUrl}
+                                onSelect={setIconUrl}
+                            />
+                            <Picker
+                                title="Star Wars"
+                                options={sw}
+                                selected={iconUrl}
+                                onSelect={setIconUrl}
+                            />
+                            <Picker
+                                title="Naruto"
+                                options={nrt}
+                                selected={iconUrl}
+                                onSelect={setIconUrl}
+                            />
+                        </div>
+
+                        {/* Direct URL */}
+                        <div className="card space-y-2">
+                            <label htmlFor="iconurl" className="label">Or paste image URL</label>
+                            <input
+                                id="iconurl"
+                                value={iconUrl ?? ""}
+                                onChange={(e) => setIconUrl(e.target.value || null)}
+                                placeholder="https://…"
+                                className="input"
+                            />
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex gap-3">
+                            <button onClick={save} disabled={saving} className="btn-accent">
+                                {saving ? "Saving…" : "Save changes"}
+                            </button>
+                            <button type="button" onClick={() => setIconUrl(null)} className="btn-outline">
+                                Remove icon
                             </button>
                         </div>
                     </div>
-
-                    {err && <p className="text-red-300">{err}</p>}
-
-                    {loading ? (
-                        <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">Loading…</div>
-                    ) : (
-                        <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
-                            <div className="flex items-center gap-4">
-                                <div className="w-16 h-16 rounded-full overflow-hidden border border-zinc-700 bg-zinc-800 grid place-items-center">
-                                    {iconUrl ? (
-                                        // eslint-disable-next-line @next/next/no-img-element
-                                        <img src={iconUrl} alt="icon" width={64} height={64} className="w-full h-full object-cover" />
-                                    ) : (
-                                        <span className="text-lg font-bold">{username?.slice(0, 2) || "?"}</span>
-                                    )}
-                                </div>
-
-                                <div className="flex-1">
-                                    <label className="block text-sm text-zinc-300 mb-1">Email</label>
-                                    <input
-                                        value={email}
-                                        readOnly
-                                        disabled
-                                        className="w-full rounded-lg border border-zinc-800 big-zinc-950/60 px-3 py-2 text-zinc-400 cursor-not-allowed"
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="mt-4">
-                                <label htmlFor="username" className="block text-base font-medium text-zinc-200 mb-1">
-                                    Edit Username
-                                </label>
-                                <input
-                                    id="username"
-                                    value={username}
-                                    onChange={(e) => setUsername(e.target.value)}
-                                    className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-zinc-100 outline-none focus:ring-2 focus:ring-zinc-600"
-                                    placeholder="Enter a username"
-                                />
-                            </div>
-
-                            <h2 className="mt-5 mb-1 text-base font-medium text-zinc-200">Update Profile Image</h2>
-
-                            <section className="space-y-3">
-                                <details className="rounded-lg border border-zinc-800 group">
-                                    <summary className="cursor-pointer select-none px-3 py-2 font-medium text-zinc-200 bg-zinc-950/60 rounded-lg flex items-center justify-between">
-                                        <span>Harry Potter</span>
-                                        <svg aria-hidden="true" viewBox="0 0 20 20" className="h-4 w-4 transition-transform duration-200 group-open:rotate-180">
-                                            <path d="M5 7l5 6 5-6" fill="currentColor" />
-                                        </svg>
-                                    </summary>
-                                    <div className="p-3">
-                                        <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-3">
-                                            {hpOptions.map((o) => {
-                                                const selected = iconUrl === o.image;
-                                                return (
-                                                    <button
-                                                        key={o.image}
-                                                        type="button"
-                                                        onClick={() => setIconUrl(o.image)}
-                                                        title={o.name}
-                                                        className={`rounded-lg overflow-hidden border ${selected ? "border-zinc-100 ring-2 ring-zinc-300" : "border-zinc-700"} bg-zinc-800`}
-                                                    >
-                                                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                        <img src={o.image} alt={o.name} className="w-full h-16 object-cover" />
-                                                    </button>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
-                                </details>
-
-                                <details className="rounded-lg border border-zinc-800 group">
-                                    <summary className="cursor-pointer select-none px-3 py-2 font-medium text-zinc-200 bg-zinc-950/60 rounded-lg flex items-center justify-between">
-                                        <span>Star Wars</span>
-                                        <svg aria-hidden="true" viewBox="0 0 20 20" className="h-4 w-4 transition-transform duration-200 group-open:rotate-180">
-                                            <path d="M5 7l5 6 5-6" fill="currentColor" />
-                                        </svg>
-                                    </summary>
-                                    <div className="p-3">
-                                        <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-3">
-                                            {swOptions.map((o) => {
-                                                const selected = iconUrl === o.image;
-                                                return (
-                                                    <button
-                                                        key={o.image}
-                                                        type="button"
-                                                        onClick={() => setIconUrl(o.image)}
-                                                        title={o.name}
-                                                        className={`rounded-lg overflow-hidden border ${selected ? "border-zinc-100 ring-2 ring-zinc-300" : "border-zinc-700"} bg-zinc-800`}
-                                                    >
-                                                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                        <img src={o.image} alt={o.name} className="w-full h-16 object-cover" />
-                                                    </button>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
-                                </details>
-
-                                <details className="rounded-lg border border-zinc-800 group">
-                                    <summary className="cursor-pointer select-none px-3 py-2 font-medium text-zinc-200 bg-zinc-950/60 rounded-lg flex items-center justify-between">
-                                        <span>Naruto</span>
-                                        <svg aria-hidden="true" viewBox="0 0 20 20" className="h-4 w-4 transition-transform duration-200 group-open:rotate-180">
-                                            <path d="M5 7l5 6 5-6" fill="currentColor" />
-                                        </svg>
-                                    </summary>
-                                    <div className="p-3">
-                                        <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-3">
-                                            {nrtOptions.map((o) => {
-                                                const selected = iconUrl === o.image;
-                                                return (
-                                                    <button
-                                                        key={o.image}
-                                                        type="button"
-                                                        onClick={() => setIconUrl(o.image)}
-                                                        title={o.name}
-                                                        className={`rounded-lg overflow-hidden border ${selected ? "border-zinc-100 ring-2 ring-zinc-300" : "border-zinc-700"} bg-zinc-800`}
-                                                    >
-                                                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                        <img src={o.image} alt={o.name} className="w-full h-16 object-cover" />
-                                                    </button>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
-                                </details>
-                            </section>
-
-                            <div className="mt-4">
-                                <label htmlFor="iconurl" className="block text-sm text-zinc-300 mb-1">Or paste image URL</label>
-                                <input
-                                    id="iconurl"
-                                    value={iconUrl ?? ""}
-                                    onChange={(e) => setIconUrl(e.target.value || null)}
-                                    placeholder="https://…"
-                                    className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-zinc-100 outline-none focus:ring-2 focus:ring-zinc-600"
-                                />
-                            </div>
-
-                            <div className="mt-4 flex gap-3">
-                                <button
-                                    onClick={save}
-                                    disabled={saving}
-                                    className="px-4 py-2 rounded-lg bg-zinc-100 text-black font-semibold disabled:opacity-60"
-                                >
-                                    {saving ? "Saving…" : "Save changes"}
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setIconUrl(null)}
-                                    className="px-4 py-2 rounded-lg border border-zinc-700 text-zinc-200"
-                                >
-                                    Remove icon
-                                </button>
-                            </div>
-                        </div>
-                    )}
-                </div>
-            </main>
+                )}
+            </div>
         </RequireUsername>
     );
+}
+
+function Picker({
+    title,
+    options,
+    selected,
+    onSelect,
+}: {
+    title: string;
+    options: Opt[];
+    selected: string | null;
+    onSelect: (s: string) => void;
+}) {
+    return (
+        <details className="accordion group">
+            <summary className="flex items-center justify-between">
+                <span className="font-medium">{title}</span>
+                <svg
+                    aria-hidden
+                    viewBox="0 0 20 20"
+                    className="h-4 w-4 transition-transform duration-200 group-open:rotate-180"
+                >
+                    <path d="M5 7l5 6 5-6" fill="currentColor" />
+                </svg>
+            </summary>
+            <div className="content">
+                <div className="grid grid-cols-4 gap-3 sm:grid-cols-6 md:grid-cols-8">
+                    {options.map((o) => {
+                        const isSel = selected === o.image;
+                        return (
+                            <button
+                                key={o.image}
+                                type="button"
+                                onClick={() => onSelect(o.image)}
+                                title={o.name}
+                                className={`overflow-hidden rounded-lg border bg-[var(--surface)] ${isSel ? "border-[var(--accent)]" : "border-[var(--border)]"
+                                    }`}
+                            >
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img src={o.image} alt={o.name} className="h-16 w-full object-cover" />
+                            </button>
+                        );
+                    })}
+                </div>
+            </div>
+        </details>
+    );
+}
+
+function dedupeByImage(list: Opt[]): Opt[] {
+    const seen = new Set<string>();
+    const out: Opt[] = [];
+    for (const o of list) {
+        if (seen.has(o.image)) continue;
+        seen.add(o.image);
+        out.push(o);
+    }
+    return out;
 }

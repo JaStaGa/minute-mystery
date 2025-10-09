@@ -1,6 +1,8 @@
-import type { HPFields, SWFields, NGFields } from "@/game/types";
+// src/game/engine/traits.ts
+import type { HPFields, SWFields, POKFields } from "@/game/types";
 import { TRAIT_KEYS as HP_KEYS } from "@/game/types";
 import { SW_TRAIT_KEYS, SW_MULTI_KEYS } from "@/game/types";
+import { POK_TRAIT_KEYS, POK_MULTI_KEYS } from "@/game/types";
 
 // helpers
 const canon = (s: string) => s.trim().toLowerCase();
@@ -40,17 +42,13 @@ export function compareTraitsSW(a: SWFields, b: SWFields) {
     };
 }
 
-// ----- NG (overlap on field2, field3, field5; exact else)
-type NGTraitKey = "field1" | "field2" | "field3" | "field4" | "field5" | "field6";
-const NG_TRAIT_KEYS: readonly NGTraitKey[] = ["field1", "field2", "field3", "field4", "field5", "field6"] as const;
-const NG_MULTI_KEYS = new Set<NGTraitKey>(["field2", "field3", "field5"]);
-
-export function compareTraitsNG(a: NGFields, b: NGFields) {
+// ----- POK (overlap on Type and Weakness; exact else)
+export function compareTraitsPOK(a: POKFields, b: POKFields) {
     const shared: string[] = [];
-    for (const k of NG_TRAIT_KEYS) {
+    for (const k of POK_TRAIT_KEYS) {
         const va = String(a[k] ?? "");
         const vb = String(b[k] ?? "");
-        if (va && vb && sameValue(k, va, vb, NG_MULTI_KEYS as Set<string>)) shared.push(`${k}: ${vb}`);
+        if (va && vb && sameValue(k, va, vb, POK_MULTI_KEYS as Set<string>)) shared.push(`${k}: ${vb}`);
     }
     return {
         shared,
@@ -58,7 +56,7 @@ export function compareTraitsNG(a: NGFields, b: NGFields) {
     };
 }
 
-// round helper (shared logic)
+// round helper
 type Guess = { text: string; ts: number };
 
 // HP
@@ -95,19 +93,19 @@ export function getNewSharedTraitsSW(round: { targetId: string; guesses: Guess[]
     return compareTraitsSW(guess, target).newSince(seen);
 }
 
-// NG
-export function getNewSharedTraitsNG(round: { targetId: string; guesses: Guess[] }, characters: NGFields[]) {
+// POK
+export function getNewSharedTraitsPOK(round: { targetId: string; guesses: Guess[] }, characters: POKFields[]) {
     const target = characters.find(c => canon(c.name) === canon(round.targetId));
     if (!target) return [];
     const seen = new Set<string>();
     for (let i = 0; i < round.guesses.length - 1; i++) {
         const g = round.guesses[i];
         const guess = characters.find(c => canon(c.name) === canon(g.text));
-        if (guess) compareTraitsNG(guess, target).shared.forEach(t => seen.add(t));
+        if (guess) compareTraitsPOK(guess, target).shared.forEach(t => seen.add(t));
     }
     const last = round.guesses[round.guesses.length - 1];
     if (!last) return [];
     const guess = characters.find(c => canon(c.name) === canon(last.text));
     if (!guess) return [];
-    return compareTraitsNG(guess, target).newSince(seen);
+    return compareTraitsPOK(guess, target).newSince(seen);
 }

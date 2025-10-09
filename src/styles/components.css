@@ -1,0 +1,144 @@
+/* Primitives driven by globals.css tokens */
+.card {
+    background: var(--card);
+    color: var(--card-foreground);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.9rem;
+}
+
+.panel {
+    background: var(--popover);
+    color: var(--popover-foreground);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem;
+}
+
+.divider {
+    height: 1px;
+    background: var(--border);
+    margin: 0.75rem 0;
+}
+
+.muted {
+    color: var(--muted-foreground);
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .5rem;
+    padding: var(--btn-py, .78rem) var(--btn-px, 1.15rem);
+    min-height: 2.75rem;
+    font-size: .98rem;
+    font-weight: 600;
+    line-height: 1.15;
+    border-radius: 10px;
+    border: 1px solid color-mix(in oklch, var(--border) 85%, transparent);
+    background: var(--secondary);
+    color: var(--secondary-foreground);
+    transition: transform .05s ease, filter .15s ease;
+    white-space: nowrap;
+}
+
+.btn:hover {
+    filter: brightness(1.05)
+}
+
+.btn:active {
+    transform: translateY(1px)
+}
+
+.btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px color-mix(in oklch, var(--accent) 35%, transparent)
+}
+
+.btn-outline {
+    background: transparent;
+    color: var(--foreground);
+}
+
+.btn-lg {
+    --btn-py: .9rem;
+    --btn-px: 1.25rem;
+    min-height: 3rem;
+    font-size: 1rem
+}
+
+.btn-sm {
+    --btn-py: .55rem;
+    --btn-px: .8rem;
+    min-height: 2.25rem;
+    font-size: .92rem;
+    border-radius: 8px
+}
+
+.btn-primary {
+    background: var(--accent);
+    color: var(--accent-foreground);
+    border-color: color-mix(in oklch, var(--accent) 55%, black);
+}
+
+.btn-primary:hover {
+    filter: brightness(1.04)
+}
+
+.btn-outline {
+    background: transparent;
+    color: var(--foreground);
+}
+
+.btn-outline-accent {
+    background: transparent;
+    color: var(--accent);
+    border-color: color-mix(in oklch, var(--accent) 40%, var(--border));
+}
+
+.btn-outline-accent:hover {
+    background: color-mix(in oklch, var(--accent) 10%, transparent);
+}
+
+.btn-subtle {
+    background: color-mix(in oklch, var(--accent) 15%, var(--secondary));
+    color: var(--foreground);
+    border-color: color-mix(in oklch, var(--accent) 30%, var(--border));
+}
+
+/* icon helpers */
+.btn-icon-right>svg {
+    width: 1.05em;
+    height: 1.05em;
+    translate: 0 .5px
+}
+
+.input {
+    width: 100%;
+    background: var(--background);
+    color: var(--foreground);
+    border: 1px solid var(--input);
+    border-radius: calc(var(--radius) - 2px);
+    padding: .55rem .7rem;
+    outline: none;
+}
+
+.input:focus {
+    box-shadow: 0 0 0 3px color-mix(in oklch, var(--accent) 35%, transparent);
+}
+
+.accordion summary {
+    cursor: pointer;
+    list-style: none;
+    padding: .8rem;
+    font-weight: 600;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+}
+
+.accordion .content {
+    padding: 0 1rem 1rem;
+}

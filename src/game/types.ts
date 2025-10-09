@@ -77,15 +77,18 @@ export const NARUTO_TRAIT_KEYS: readonly NarutoTraitKey[] =
     ['hair', 'debut', 'gender', 'village', 'role', 'abilities'] as const
 export const NARUTO_MULTI_KEYS = new Set<NarutoTraitKey>(['village', 'role', 'abilities'])
 
-export type NGFields = {
+export type POKFields = {
     name: string
     image?: string
-    field1: string
-    field2: string
-    field3: string
-    field4: string
-    field5: string
-    field6: string
+    type: string
+    weakness: string
+    generation: string
+    region: string
+    classification: string
+    color: string
 }
 
-export type NGCharacter = NGFields
+export type POKTraitKey = 'type' | 'weakness' | 'generation' | 'region' | 'classification' | 'color'
+export const POK_TRAIT_KEYS: readonly POKTraitKey[] =
+    ['type', 'weakness', 'generation', 'region', 'classification', 'color'] as const
+export const POK_MULTI_KEYS = new Set<POKTraitKey>(['type', 'weakness'])

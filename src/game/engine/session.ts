@@ -196,25 +196,25 @@ export function reducerSW(state: SessionStateSW, action: ActionSW): SessionState
     }
 }
 
-// ---- NG reducer (same scoring + 5-mistake rule)
-import type { NGFields } from "@/game/types";
+// ---- POK reducer (same scoring + 5-mistake rule)
+import type { POKFields } from "@/game/types";
 
-export type SessionStateNG = {
+export type SessionStatePOK = {
     status: "idle" | "playing" | "ended";
-    target: NGFields | null;
+    target: POKFields | null;
     attempts: string[];
     score: number;
     mistakes: number;  // mistakes this round
     round: number;
 };
 
-type ActionNG =
-    | { type: "start"; target: NGFields }
+type ActionPOK =
+    | { type: "start"; target: POKFields }
     | { type: "guess"; name: string }
-    | { type: "next-target"; target: NGFields }
+    | { type: "next-target"; target: POKFields }
     | { type: "end" };
 
-export function reducerNG(state: SessionStateNG, action: ActionNG): SessionStateNG {
+export function reducerPOK(state: SessionStatePOK, action: ActionPOK): SessionStatePOK {
     switch (action.type) {
         case "start":
             return { status: "playing", target: action.target, attempts: [], score: 0, mistakes: 0, round: 1 };
