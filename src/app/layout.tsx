@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import AppShell from "@/components/AppShell";
+import AuthWatcher from "@/components/auth-watcher";
 
 export const viewport: Viewport = { themeColor: "#0b0b0d" };
 
@@ -19,6 +20,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className="dark">
       <body className="accent-none">
+        <AuthWatcher/>
         <AppShell>{children}</AppShell>
       </body>
     </html>
